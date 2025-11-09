@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/index.js"></script>
+    <link rel="stylesheet" href="/assets/css/index.css">
+    <link rel="stylesheet" href="/assets/css/modalCard.css">
+    <link rel="stylesheet" href="/assets/css/shadowCover.css">
+    <link rel="stylesheet" href="/assets/css/responseTip.css">
+    <link rel="stylesheet" href="/assets/css/themeHeader.css">
+    <title>www.TQ.org</title>
+</head>
+
+<body>
+    <div class="header theme-header">
+    <% if (session.userEmail) { %>
+        <button class="loginButton" id="TQ">
+            <%= session.userEmail %>
+        </button>
+        <% } else { %>
+        <button class="loginButton" id="loginButton">
+            登录
+        </button>
+        <% } %>
+    </div>
+
+    <div class="content">
+        <div class="hero">
+            <h1>Master knowledge, One question at a time</h1>
+            <p>Built with Node.js and MongoDB to help you understand — not just memorize — how computers really work.</p>
+            <a class="enterTQ" href="/TQ">Let's go</a>
+          </div>
+    </div>
+
+    <div class="login-content modalCard">
+        <form>
+            <div>邮箱</div>
+            <input type="email" name="userEmail" required>
+            <div>密码</div>
+            <input type="password" name="userPasswd" required>
+            <button id="submitLoginButton" type="submit">
+                提交
+            </button>
+        </form>
+    </div>
+
+    <div class="shadow-cover"></div>
+    <div class="response-tip"></div>
+</body>
+
+</html>

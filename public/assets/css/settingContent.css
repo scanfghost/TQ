@@ -1,0 +1,37 @@
+.setting-content{
+    display: none;
+    position: fixed;
+    width: 400px;
+    height: 300px;
+    top: calc(50vh - 200px);
+    left: calc(50vw - 200px);
+}
+.setting-content.active{
+    display:  block;
+}
+.setting-item{
+    padding: 10px 20px;
+    background-color: rgb(239, 239, 239);
+    display: flex;
+    justify-content: space-between;
+    line-height: var(--H-SlideSwitch);
+}
+label.slideSwitch{
+    display: block;
+}
+
+#modifyUserSettingButton{
+    position: absolute;
+    width: 100px;
+    height: 40px;
+    bottom: 30px;
+    left: calc(50% - 50px);
+    border: 0;
+    background-color: #efefef;
+    transition: background-color 0.3s ease;
+}
+
+#modifyUserSettingButton:hover{
+    background-color: #bebdbd;
+    cursor: pointer;
+}

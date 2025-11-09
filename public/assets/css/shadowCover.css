@@ -1,0 +1,15 @@
+.shadow-cover{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    display: none;
+  }
+  
+  .shadow-cover.active{
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99;
+    background: rgba(197, 190, 190, 0.2); 
+    backdrop-filter: blur(10px)
+  }

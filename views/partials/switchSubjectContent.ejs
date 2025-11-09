@@ -1,0 +1,26 @@
+<form id="switchSubjectForm">
+    <div>
+        <label for="subject">选择科目：</label>
+        <select name="subject" id="selectForSubject" required>
+            <option value="">- 请选择 -</option>
+            <% subjectNames.forEach(function(item){ %>
+                <option value="<%= item%>">
+                    <%= item%>
+                </option>
+                <% }) %>
+        </select>
+    </div>
+    <div>
+        <label for="chapter">选择章节：</label>
+        <select name="chapter" id="selectForChapter" required>
+            <option value="">- 请选择 -</option>
+        </select>
+    </div>
+    <div>
+        <label for="section">选择段：</label>
+        <select name="section" id="selectForSection" required>
+            <option value="">- 请选择 -</option>
+        </select>
+    </div>
+    <button type="submit" id="switchSubjectButton">切换科目</button>
+</form>

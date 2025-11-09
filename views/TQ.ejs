@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/assets/js/jquery.min.js"></script>
+    <link rel="stylesheet" href="/assets/css/TQ.css">
+    <link rel="stylesheet" href="/assets/css/shadowCover.css">
+    <link rel="stylesheet" href="/assets/css/switchSubjectContent.css">
+    <link rel="stylesheet" href="/assets/css/settingContent.css">
+    <link rel="stylesheet" href="/assets/css/slideSwitch.css">
+    <link rel="stylesheet" href="/assets/css/modalCard.css">
+    <script src="/assets/js/TQ.js"></script>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>www.TQ.org</title>
+</head>
+
+<body>
+    <div class="content">
+        <div class="QA">
+            <div class="title-content">
+                <%- include('./partials/titleContent.ejs') -%>
+            </div>
+            <div class="explanation-content">
+                <% if(userSetting.instantJudge && title.userAnswer) {%>
+                    <%- include('./partials/explanationContent.ejs') -%>
+                <% } %>
+            </div>
+        </div>
+        <div class="table-content">
+            <ul>
+                <% for(var i=1; i <=titleSize; i++){ %>
+                    <% const oneTitle=titles[i - 1]; let className='' ; if (oneTitle.userAnswer) { className
+                        +='answered' ; if (userSetting && userSetting.instantJudge) { if
+                        (oneTitle.userAnswer.answerIndex===oneTitle.rightIndex) { className +=' right' ; } else {
+                        className +=' wrong' ; } } } %>
+                        <li id="No<%= titles[i-1]._id %>" class="<%= className %>">
+                            <%= i %>
+                        </li>
+                        <% } %>
+            </ul>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="float-btn">＋</div>
+        <div class="actions">
+            <div class="actions-item" id="subjectName">
+                <%= subjectName %>
+            </div>
+            <div class="actions-item" id="chapterName">
+                <%= chapterName %>
+            </div>
+            <div class="actions-item" id="sectionName">
+                <%= sectionName %>
+            </div>
+            <div class="action actions-item" id="selectSubject">选择科目与章节</div>
+            <div class="action actions-item" id="restartAnswer">重新做题</div>
+            <div class="action actions-item" id="setting">偏好设置</div>
+        </div>
+    </div>
+
+    <div class="switchSubject-content modalCard"></div>
+
+    <div class="setting-content modalCard">
+        <%- include('./partials/settingContent.ejs')-%>
+    </div>
+
+    <div class="shadow-cover"></div>
+</body>
+
+</html>

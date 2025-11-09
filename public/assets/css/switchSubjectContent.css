@@ -1,0 +1,49 @@
+.switchSubject-content {
+    display: none;
+    position: fixed;
+    width: 300px;
+    top: calc(50vh - 150px);
+    left: calc(50vw - 150px);
+  }
+  
+  .switchSubject-content.active {
+    display: block;
+  }
+  
+  .switchSubject-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: calc(100% - 20px);
+    height: calc(100% - 20px);
+    padding: 10px;
+  }
+  
+  .switchSubject-content form div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .switchSubject-content form div>* {
+    display: block;
+  }
+  
+  .switchSubject-content form div select{
+    width: 80%;
+    height: 30px;
+    margin: 0 auto;
+  }
+  
+  #switchSubjectButton {
+    border: 0;
+    background-color: #f8f9fa;
+    width: 60%;
+    height: 40px;
+    padding: 10px;
+    margin: 10px auto 0 auto;
+  }
+  
+  #switchSubjectButton:hover {
+    background-color: #ddd;
+  }

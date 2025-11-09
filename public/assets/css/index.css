@@ -1,0 +1,92 @@
+:root{
+    --H-SlideSwitch: 30px;
+    --button-background-color: #ececed;
+    --button-hover-background-color: #d4d4d4;
+}
+
+body{
+    margin: 0;
+}
+
+.content{
+}
+
+.header{
+    display: flex;
+    align-items: center;
+}
+
+.hero{
+    padding: 50px 20px;
+    text-align: center;
+    margin-top: 100px;
+}
+
+.hero h1{
+    font-size: 50px;
+}
+
+.hero p{
+    font-size: 18px;
+}
+
+.enterTQ{
+    text-decoration: none;
+    color: black;
+}
+
+.enterTQ{
+    display: block;
+    font-size: 24px;
+    margin: 30px auto 0 auto;
+    width: 160px;
+    height: 58px;
+    line-height: 58px;
+    border: 0;
+    border-radius: 6px;
+    background-color: var(--button-background-color);
+    transition: background-color 0.3s ease;
+    box-shadow: 2px 4px 6px rgb(182, 182, 182);
+}
+
+.enterTQ:hover{
+    background-color: var(--button-hover-background-color);
+    cursor: pointer;
+}
+
+.login-content{
+    display: none;
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    z-index: 100;
+}
+
+.login-content.active{
+    display: block;
+}
+
+.login-content form{
+    padding: 10px;
+}
+
+.loginButton{
+    display: block;
+    min-width: 60px;
+    height: 40px;
+    padding: 10px;
+    margin-left: auto;
+    margin-right: 20px;
+    background-color: var(--button-background-color);
+    border: 0;
+    letter-spacing: 2px;
+    transition: background-color 0.3s ease;
+}
+
+.loginButton:hover{
+    cursor: pointer;
+    background-color: var(--button-hover-background-color);
+}

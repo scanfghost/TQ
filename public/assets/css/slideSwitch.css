@@ -1,0 +1,46 @@
+.slideSwitch {
+    position: relative;
+    width: 60px;
+    height: var(--H-SlideSwitch);
+  }
+
+  .slideSwitch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #bebdbd;
+    transition: 0.2s;
+    /*border-radius: 30px;  圆角长方形轨道 */
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: calc(var(--H-SlideSwitch) - 4px);
+    width: 22px;
+    left: 4px;
+    top: 2px;
+    background-color: white;
+    transition: 0.2s;
+    /*border-radius: 50%;  小正方形（实际是圆形，但也可改成方形） */
+  }
+
+  input:checked + .slider {
+    background-color: #2196F3;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(30px); /* 向右滑动 */
+  }
+
+  /* 如果你想要小滑块是正方形（不是圆），注释掉 border-radius: 50% */
+  /* .slider:before { border-radius: 4px; } */

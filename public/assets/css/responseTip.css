@@ -1,0 +1,22 @@
+.response-tip {
+    min-width: 150px;
+    height: 50px;
+    padding: 0 30px;
+    white-space: nowrap;
+    position: fixed;
+    top: 40px;
+    left: 50%;
+    transform: translateY(-90px) translateX(-50%);
+    transition: transform 0.5s ease;
+    user-select: none;
+    border: 0;
+    background-color: #f0fdf7;
+    color: #049d6d;
+    text-align: center;
+    line-height: 50px;
+    z-index: 101;
+}
+
+.response-tip.active {
+    transform: translateY(0) translateX(-50%);
+}
