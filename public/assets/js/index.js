@@ -13,7 +13,6 @@ $(document).ready(() => {
         e.preventDefault()
         var userEmail = $('input[name="userEmail"]', this).val()
         var userPasswd = $('input[name="userPasswd"]', this).val()
-        console.log(userEmail + " " + userPasswd)
 
         $.ajax({
             type: 'POST',

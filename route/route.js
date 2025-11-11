@@ -15,7 +15,7 @@ router.get('/chapterNames', controller.getChapterNames)
 
 router.get('/sectionNames', controller.getSectionNames)
 
-router.get('/modifySubject/:subjectName/:chapterName/:sectionName', controller.modifySubject)
+router.post('/modifyUserSubject', controller.modifyUserSubject)
 
 router.post('/login', controller.loginUser)
 
@@ -23,6 +23,6 @@ router.post('/choice', controller.submitChoice)
 
 router.post('/modifyUserSetting', userSettingController.modifyUserSetting)
 
-router.delete('/restartAnswer/:subjectName/:chapterName', controller.removeUserAnswer)
+router.delete('/restartAnswer', controller.removeUserAnswer)
 
 module.exports = router

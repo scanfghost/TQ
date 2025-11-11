@@ -23,9 +23,6 @@ $(document).ready(() => {
         const _id = $('.title')[0].id
         const relavantLi = $(`#No${_id}`)
         const selected = this.id.replace('choice', '')
-        const subjectName = $('#subjectName').text().trim()
-        const chapterName = $('#chapterName').text().trim()
-        const sectionName = $('#sectionName').text().trim()
 
         if (relavantLi.hasClass('answered')) {
             return
@@ -39,7 +36,7 @@ $(document).ready(() => {
         $.ajax({
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ selected, _id, subjectName, chapterName, sectionName}),
+            data: JSON.stringify({ selected, _id}),
             url: '/choice',
             success: function (res) {
                 $('.explanation-content').html(res.html.explanationContent)
@@ -70,14 +67,10 @@ $(document).ready(() => {
         if (!confirm("重新做题不保留记录，是否继续?")) {
             return
         }
-        const subjectName = $('#subjectName').text().trim()
-        const chapterName = $('#chapterName').text().trim()
-
-        console.log(subjectName + " : " + chapterName)
 
         $.ajax({
             type: 'DELETE',
-            url: '/restartAnswer' + "/" + encodeURIComponent(subjectName) + "/" + encodeURIComponent(chapterName),
+            url: '/restartAnswer',
             success: () => {
                 location.reload()
             }
@@ -146,13 +139,17 @@ $(document).ready(() => {
     $(document).on('submit', '#switchSubjectForm', function (e) {
         e.preventDefault()
 
-        const subjectName = $('#selectForSubject').val().trim()
-        const chapterName = $('#selectForChapter').val().trim()
-        const sectionName = $('#selectForSection').val().trim()
+        const subject = $('#selectForSubject').val()
+        const chapter = $('#selectForChapter').val()
+        const section = $('#selectForSection').val()
 
         $.ajax({
-            type: 'GET',
-            url: '/modifySubject' + "/" + encodeURIComponent(subjectName) + "/" + encodeURIComponent(chapterName)+ "/" + encodeURIComponent(sectionName),
+            type: 'POST',
+            contentType: 'application/json',
+            url: '/modifyUserSubject',
+            data: JSON.stringify({
+                subject,chapter,section
+            }),
             success: (result) => {
                 if (result.success == 1) {
                     location.reload()

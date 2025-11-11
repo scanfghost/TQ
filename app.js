@@ -6,13 +6,24 @@ var session = require('express-session')
 var MongoStore = require('connect-mongo');
 const authMiddleware = require('./middleware/auth')
 
-mongoose.connect(process.env.remoteUrl)
+if (process.env.nativeDB) {
+    mongoose.connect(process.env.nativeUrl)
     .then(() => {
-        console.log('✅ MongoDB 连接成功');
+        console.log('✅ 本地MongoDB 连接成功');
     })
     .catch(err => {
         console.error('❌ MongoDB 连接失败:', err.message);
     });
+} else {
+    mongoose.connect(process.env.remoteUrl)
+    .then(() => {
+        console.log('✅ 远程MongoDB 连接成功');
+    })
+    .catch(err => {
+        console.error('❌ MongoDB 连接失败:', err.message);
+    });
+}
+
 
 const sessionStore = MongoStore.create({
     client: mongoose.connection.getClient(),

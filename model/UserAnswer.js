@@ -2,11 +2,8 @@ var mongoose = require('mongoose')
 
 var userAnswerSchema = new mongoose.Schema({
     fcollection: String,
-    fid: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Title',
-        required: true
-    },
+    fuseremail: String,
+    ftitleid: mongoose.Schema.Types.ObjectId,
     answerIndex: Number
 })
 
