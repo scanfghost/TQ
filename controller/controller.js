@@ -73,7 +73,7 @@ async function getTitle(req, res) {
     try {
         formatRes.html.titleContent = await ejs.renderFile(templateDir + '/partials/titleContent.ejs', { title: titleDoc, No: req.query.No })
         if (titleDoc.userAnswer) {
-            const userSetting = await userSettingService.getUserSetting(req.session.userEmail)
+            const userSetting = await userSettingService.getUserSetting(req.session.user.userEmail)
             if (userSetting.instantJudge) {
                 // const explanation = await service.getExplanationById(req.params._id)
                 formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { explanation: titleDoc.explanation })

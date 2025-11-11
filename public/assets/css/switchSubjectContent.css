@@ -6,6 +6,14 @@
     left: calc(50vw - 150px);
   }
   
+  @media (max-width: 400px) {
+    .switchSubject-content {
+        width: 80vw;
+        top: 10vh;
+        left: 5vw;
+    }
+}
+
   .switchSubject-content.active {
     display: block;
   }

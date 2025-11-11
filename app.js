@@ -6,7 +6,7 @@ var session = require('express-session')
 var MongoStore = require('connect-mongo');
 const authMiddleware = require('./middleware/auth')
 
-if (process.env.nativeDB) {
+if (process.env.nativeDB == 1) {
     mongoose.connect(process.env.nativeUrl)
     .then(() => {
         console.log('✅ 本地MongoDB 连接成功');

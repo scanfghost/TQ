@@ -1,4 +1,4 @@
-.setting-content{
+.setting-content {
     display: none;
     position: fixed;
     width: 400px;
@@ -6,21 +6,33 @@
     top: calc(50vh - 200px);
     left: calc(50vw - 200px);
 }
-.setting-content.active{
-    display:  block;
+
+@media (max-width: 400px) {
+    .setting-content {
+        width: 80vw;
+        height: 50vh;
+        top: 10vh;
+        left: 5vw;
+    }
 }
-.setting-item{
+
+.setting-content.active {
+    display: block;
+}
+
+.setting-item {
     padding: 10px 20px;
     background-color: rgb(239, 239, 239);
     display: flex;
     justify-content: space-between;
     line-height: var(--H-SlideSwitch);
 }
-label.slideSwitch{
+
+label.slideSwitch {
     display: block;
 }
 
-#modifyUserSettingButton{
+#modifyUserSettingButton {
     position: absolute;
     width: 100px;
     height: 40px;
@@ -31,7 +43,7 @@ label.slideSwitch{
     transition: background-color 0.3s ease;
 }
 
-#modifyUserSettingButton:hover{
+#modifyUserSettingButton:hover {
     background-color: #bebdbd;
     cursor: pointer;
 }
