@@ -1,12 +1,9 @@
+import { toggleResponseTip } from './responseTip.js'
+import { activeModalCard, idleModalCard } from './modalCard.js'
+
 $(document).ready(() => {
     $('#loginButton').on('click', function () {
-        $('.login-content').addClass('active')
-        $('.shadow-cover').addClass('active')
-    })
-
-    $('.shadow-cover').on('click', function () {
-        $('.shadow-cover').removeClass('active')
-        $('.login-content').removeClass('active')
+        activeModalCard('.login-content')
     })
 
     $('.login-content').on('submit', function (e) {
@@ -24,22 +21,13 @@ $(document).ready(() => {
             }),
             success: function (res) {
                 if (res.data.loginSuccess) {
-                    $('.response-tip').html("登录成功，3秒后跳转...")
-                    $('.response-tip').addClass('active')
-                    $('.shadow-cover').removeClass('active')
-                    $('.login-content').removeClass('active')
-                    setTimeout(function () {
-                        $('.response-tip').removeClass('active')
-                    }, 2000)
+                    toggleResponseTip("登录成功，3秒后跳转...", 2000)
+                    idleModalCard('.login-content')
                     setTimeout(() => {
                         window.location.href = res.data.url
                     }, 3000);
                 } else {
-                    $('.response-tip').html("登录失败: " + res.errMsg)
-                    $('.response-tip').addClass('active')
-                    setTimeout(() => {
-                        $('.response-tip').removeClass('active')
-                    }, 2000);
+                    toggleResponseTip("登录失败: " + res.errMsg, 2000)
                 }
             }
         })
@@ -48,11 +36,7 @@ $(document).ready(() => {
     $('.enterTQ').on('click', function (e) {
         if ($('#loginButton').length > 0) {
             e.preventDefault()
-            $('.response-tip').html("请先登录")
-            $('.response-tip').addClass('active')
-            setTimeout(() => {
-                $('.response-tip').removeClass('active')
-            }, 2000);
+            toggleResponseTip("请先登录", 2000)
         }
     })
 })

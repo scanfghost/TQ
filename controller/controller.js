@@ -1,5 +1,6 @@
 const path = require('path')
 const ejs = require('ejs')
+const fs = require('fs').promises
 const ObjectId = require('mongoose').Types.ObjectId
 var service = require('../service/service')
 const createTitleService = require('../service/titleService')
@@ -10,19 +11,14 @@ const userAnswerModel = require('../model/userAnswer')
 const subjectModel = require('../model/Subject')
 const chapterModel = require('../model/Chapter')
 const userModel = require('../model/User')
+const historyAnswerModel = require('../model/HistoryAnswer')
+const {createFormatRes} = require('../common/formatRes')
+const {md5} = require('../common/md5')
 
 const templateDir = path.join(__dirname, '../views')
 
-const titleService = createTitleService({getTitleModel, userAnswerModel, subjectModel, chapterModel})
+const titleService = createTitleService({getTitleModel, userAnswerModel, historyAnswerModel, subjectModel, chapterModel})
 const userService = createUserService({userModel, userAnswerModel, ObjectId }) 
-
-function createFormatRes() {
-    return {
-        html: {},
-        data: {},
-        errMsg: ""
-    }
-}
 
 function getIndexPage(req, res) {
     res.render('index', { session: req.session })
@@ -80,7 +76,7 @@ async function getTitle(req, res) {
             }
         }
     } catch (err) {
-        res.status(500)
+        res.status(403)
         formatRes.errMsg = 'getTitle: ' + err
         res.json(formatRes)
         return
@@ -105,7 +101,7 @@ async function submitChoice(req, res) {
             formatRes.data.answer = "answered"
         }
     } catch (err) {
-        res.status(500)
+        res.status(403)
         formatRes.errMsg = 'getTitle: ' + err
         res.json(formatRes)
         return
@@ -145,8 +141,43 @@ async function modifyUserSubject(req, res) {
     const subject = req.body.subject
     const chapter = req.body.chapter
     const section = req.body.section
-    await userService.modifyUserSubject(req.session.user.userEmail, subject, chapter, section)
+    const result = await userService.modifyUserSubject(req.session.user.userEmail, subject, chapter, section)
+    req.session.user = result
     res.json({ success: 1 })
+}
+
+async function saveHistoryAnswer(req, res) {
+    var formatRes = createFormatRes()
+    const subjectName = req.session.user.currentSubject
+    const chapterName = req.session.user.currentChapter
+    const sectionName = req.session.user.currentSection
+    const sectionRef = await titleService.getSectionRef(subjectName, chapterName, sectionName)
+    const [code, message] = await titleService.saveHistoryAnswer(req.session.user.userEmail, sectionRef)
+
+    if (code != 1) {
+        formatRes.errMsg = message
+        res.status(403).json(formatRes)
+        return
+    }
+    formatRes.data.message = message
+    res.json(formatRes)
+}
+
+async function uploadPictureOfTitle(req, res) {
+    var formatRes = createFormatRes()
+    const subjectName = req.session.user.currentSubject
+    const chapterName = req.session.user.currentChapter
+    const sectionName = req.session.user.currentSection
+    const {titleModel, sectionRef} = await titleService.getTitleModel(subjectName, chapterName, sectionName)
+    const result = await titleService.getTitleById(titleModel, req.body._id, ['explanation'])
+    const hashInput = result.title + JSON.stringify(result.choice)
+    const ext = path.extname(req.file.filename)
+    const hash = md5(hashInput, 12)
+    const newFilename = `${hash}${ext}`
+    const newFilePath = path.join(process.env.imgStoreFolder, newFilename)
+    await fs.rename(req.file.path, newFilePath)
+    titleService.modifyImgOfTitle(titleModel, req.body._id, newFilename)
+    res.end()
 }
 
 module.exports = {
@@ -159,5 +190,7 @@ module.exports = {
     submitSubjectForm,
     removeUserAnswer,
     modifyUserSubject,
-    loginUser
+    loginUser,
+    saveHistoryAnswer,
+    uploadPictureOfTitle
 }

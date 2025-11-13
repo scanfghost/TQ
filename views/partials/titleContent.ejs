@@ -1,5 +1,5 @@
 <div class="title" id="<%= title._id %>">
-    <span>
+    <span id="title_no">
         <%= No %>.
     </span>
     <%= title.title %>
@@ -14,4 +14,7 @@
                 </li>
                 <% }) %>
         </ul>
+</div>
+<div class="titleImg-content">
+    <img src="/assets/img/<%= title.img %>" alt="">          
 </div>

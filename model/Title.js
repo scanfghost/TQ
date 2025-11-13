@@ -4,7 +4,8 @@ var titleSchema = new mongoose.Schema({
     title: String,
     choice: [String],
     rightIndex: Number,
-    explanation: String
+    explanation: String,
+    img: String
 })
 
 function getTitleModel(collectionName) {

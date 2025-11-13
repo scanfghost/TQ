@@ -1,6 +1,4 @@
 .setting-content {
-    display: none;
-    position: fixed;
     width: 400px;
     height: 300px;
     top: calc(50vh - 200px);
@@ -14,10 +12,6 @@
         top: 10vh;
         left: 5vw;
     }
-}
-
-.setting-content.active {
-    display: block;
 }
 
 .setting-item {

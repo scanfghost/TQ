@@ -70,7 +70,8 @@ function createUserService({ userModel, userAnswerModel, ObjectId }) {
                     },
                     {
                         new: true,
-                        lean: true
+                        lean: true,
+                        select: "-userPasswd"
                     }
                 )
 

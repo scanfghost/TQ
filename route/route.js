@@ -2,6 +2,7 @@ var express = require('express')
 var router = express.Router()
 var controller = require('../controller/controller')
 var userSettingController = require('../controller/userSettingController')
+const {imgUpload} = require('../middleware/upload')
 
 router.get('/TQ', controller.getTQPage)
 
@@ -22,6 +23,10 @@ router.post('/login', controller.loginUser)
 router.post('/choice', controller.submitChoice)
 
 router.post('/modifyUserSetting', userSettingController.modifyUserSetting)
+
+router.post('/saveHistoryAnswer', controller.saveHistoryAnswer)
+
+router.post('/uploadPictureOfTitle', imgUpload.single('picture'), controller.uploadPictureOfTitle)
 
 router.delete('/restartAnswer', controller.removeUserAnswer)
 

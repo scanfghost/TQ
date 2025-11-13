@@ -1,3 +1,6 @@
+import { activeModalCard, idleModalCard } from './modalCard.js'
+import { toggleResponseTip } from './responseTip.js'
+
 $(document).ready(() => {
     $(document).on('click', '.table-content ul li', function () {
         const i = this.id.replace('No', '');
@@ -6,15 +9,16 @@ $(document).ready(() => {
             type: 'GET',
             url: '/title/' + i + "?No=" + encodeURIComponent(text),
             success: (res) => {
-                $('.explanation-content').html('') 
+                $('.explanation-content').html('')
                 if (res.html.explanationContent) {
                     $('.explanation-content').html(res.html.explanationContent)
-                } 
+                }
                 $('.title-content').html(res.html.titleContent)
             },
             error: (xhr, status, err) => {
-                const errorData = JSON.parse(xhr.responseText);
-                console.log('服务端错误信息:', errorData.errMsg);
+                const errorData = JSON.parse(xhr.responseText)
+                toggleResponseTip(`服务端错误信息: errorData.errMsg`)
+                console.log('服务端错误信息:', errorData.errMsg)
             }
         })
     })
@@ -36,7 +40,7 @@ $(document).ready(() => {
         $.ajax({
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ selected, _id}),
+            data: JSON.stringify({ selected, _id }),
             url: '/choice',
             success: function (res) {
                 $('.explanation-content').html(res.html.explanationContent)
@@ -53,8 +57,8 @@ $(document).ready(() => {
                 }
             },
             error: function (xhr, status, error) {
-                const errorData = JSON.parse(xhr.responseText);
-                console.log('服务端错误信息:', errorData.errMsg);
+                const errorData = JSON.parse(xhr.responseText)
+                console.log('服务端错误信息:', errorData.errMsg)
             }
         })
     })
@@ -77,29 +81,70 @@ $(document).ready(() => {
         })
     })
 
+    $('#saveAnswer').on('click', function () {
+
+        $.ajax({
+            type: 'POST',
+            url: '/saveHistoryAnswer',
+            success: (res) => {
+                toggleResponseTip(res.data.message, 4000)
+            },
+            error: (xhr, status, err) => {
+                const errorData = JSON.parse(xhr.responseText)
+                toggleResponseTip(errorData.errMsg, 4000)
+            }
+        })
+    })
+
+    $('#uploadPictureOfTitle').on('click', function () {
+        const title_no = $('#title_no').text().trim().replace(/\.$/, '')
+        const p = $('.uploadPictureOfTitle-content')
+        p.find('form').find('div').first().html(`为第 ${title_no} 题添加图片`)
+        activeModalCard('.uploadPictureOfTitle-content')
+    })
+
+    $('.uploadPictureOfTitle-content form').on('submit', function (e) {
+        e.preventDefault()
+        var _id = 0
+        try {
+            const title_no = +($('#title_no').text().trim().replace(/\.$/, ''))
+            _id = $(`.table-content ul li:nth-child(${title_no})`).attr('id').replace('No', '')
+        } catch (err) {
+            console.log(`uploadPicture err: ${err}`)
+        }
+
+        const formData = new FormData(this)
+        formData.append('_id', _id)
+        $.ajax({
+            type: 'POST',
+            contentType: false,
+            url: '/uploadPictureOfTitle',
+            data: formData,
+            processData: false,
+            success: function (res) {
+                toggleResponseTip('上传成功, 即将刷新页面', 3000)
+                idleModalCard()
+                setTimeout(() => {
+                    location.reload()
+                }, 4000);
+            },
+            error: function (xhr, status, err) {
+                const formatRes = JSON.parse(xhr.responseText)
+                toggleResponseTip(`上传失败: ${formatRes.errMsg}`, 4000)
+            }
+        })
+    })
+
     $('#selectSubject').on('click', function () {
         const switchSubject = $('.switchSubject-content')
         $.ajax({
             type: "GET",
             url: 'subjectForm',
             success: (result) => {
-                switchSubject.addClass('active')
                 switchSubject.html(result)
-                $('.shadow-cover').addClass('active')
+                activeModalCard('.switchSubject-content')
             }
         })
-    })
-
-    $('#setting').on('click', function () {
-        $('.setting-content').addClass('active')
-        $('.shadow-cover').addClass('active')
-    })
-
-    $('.shadow-cover').on('click', function () {
-        $('.switchSubject-content').removeClass('active');
-        $('.switchSubject-content').html('')
-        $('.setting-content').removeClass('active')
-        $('.shadow-cover').removeClass('active')
     })
 
     $(document).on('change', '#selectForSubject', function () {
@@ -148,15 +193,15 @@ $(document).ready(() => {
             contentType: 'application/json',
             url: '/modifyUserSubject',
             data: JSON.stringify({
-                subject,chapter,section
+                subject, chapter, section
             }),
             success: (result) => {
                 if (result.success == 1) {
                     location.reload()
                 } else {
-                    $('.switchSubject-content').removeClass('active');
                     $('.switchSubject-content').html('')
-                    $('.shadow-cover').removeClass('active')
+                    console.log('here')
+                    idleModalCard()
                 }
             }
         })
@@ -193,5 +238,9 @@ $(document).ready(() => {
                 location.reload()
             }
         })
+    })
+
+    $('#setting').on('click', function () {
+        activeModalCard('.setting-content')
     })
 })

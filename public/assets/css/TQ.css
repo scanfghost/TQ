@@ -109,6 +109,15 @@ body {
   cursor: pointer;
 }
 
+.titleImg-content{
+  margin-top: 20px;
+}
+
+.titleImg-content img{
+  display: block;
+  width: 100%;
+}
+
 .table-content {
   width: 30%;
   flex-shrink: 0;

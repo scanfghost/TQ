@@ -1,6 +1,4 @@
 .switchSubject-content {
-    display: none;
-    position: fixed;
     width: 300px;
     top: calc(50vh - 150px);
     left: calc(50vw - 150px);
@@ -13,10 +11,6 @@
         left: 5vw;
     }
 }
-
-  .switchSubject-content.active {
-    display: block;
-  }
   
   .switchSubject-content form {
     display: flex;

@@ -9,7 +9,8 @@ var UserSchema = new mongoose.Schema({
     userPasswd: String,
     currentSubject: String,
     currentChapter: String,
-    currentSection: String
+    currentSection: String,
+    role: String
 })
 
 module.exports = mongoose.model('User', UserSchema, 'user')

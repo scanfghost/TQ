@@ -5,6 +5,7 @@ var router = require('./route/route')
 var session = require('express-session')
 var MongoStore = require('connect-mongo');
 const authMiddleware = require('./middleware/auth')
+const {createFormatRes} = require('./common/formatRes')
 
 if (process.env.nativeDB == 1) {
     mongoose.connect(process.env.nativeUrl)
@@ -37,8 +38,17 @@ var app = express()
 app.set('view engine', 'ejs')
 
 app.use(express.static('./public'))
+
+var SESSION_SECRET = null
+
+if (process.env.dynamicSecret == 1) {
+    SESSION_SECRET = process.env.secret + Date.now()
+} else {
+    SESSION_SECRET = process.env.secret
+}
+
 app.use(express.json())
-const SESSION_SECRET = process.env.secret + Date.now()
+
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
@@ -51,7 +61,16 @@ app.use(session({
     }
 }))
 app.use(authMiddleware.auth)
+app.use(authMiddleware.adminOnly)
 app.use('/', router)
+app.use((err, req, res, next) => {
+    var formatRes = createFormatRes()
+    if (err) {
+        formatRes.errMsg = err.message
+      return res.status(400).json(formatRes)
+    }
+    next()
+  })
 
 app.listen(process.env.port)
 console.log('NEMTQ listening to localhost port 3000')
