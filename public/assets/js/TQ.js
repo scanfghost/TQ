@@ -2,18 +2,25 @@ import { activeModalCard, idleModalCard } from './modalCard.js'
 import { toggleResponseTip } from './responseTip.js'
 
 $(document).ready(() => {
+    function updateTitleInUrl(newid, newNo) {
+        const newPath = `/TQ/${newid}/${newNo}`
+        history.replaceState({ questionNum: newNo }, '', newPath)
+    }
+
     $(document).on('click', '.table-content ul li', function () {
-        const i = this.id.replace('No', '');
+        let _id = this.id.replace('No', '')
         const text = $(this).text().trim()
         $.ajax({
             type: 'GET',
-            url: '/title/' + i + "?No=" + encodeURIComponent(text),
+            url: '/title/' + _id + "?No=" + encodeURIComponent(text),
             success: (res) => {
                 $('.explanation-content').html('')
                 if (res.html.explanationContent) {
                     $('.explanation-content').html(res.html.explanationContent)
                 }
                 $('.title-content').html(res.html.titleContent)
+                let [newid, newtitle_no] = get_idNo()
+                updateTitleInUrl(newid, newtitle_no)
             },
             error: (xhr, status, err) => {
                 const errorData = JSON.parse(xhr.responseText)
@@ -103,15 +110,20 @@ $(document).ready(() => {
         activeModalCard('.uploadPictureOfTitle-content')
     })
 
-    $('.uploadPictureOfTitle-content form').on('submit', function (e) {
-        e.preventDefault()
-        var _id = 0
+    function get_idNo() {
+        let _id, title_no
         try {
-            const title_no = +($('#title_no').text().trim().replace(/\.$/, ''))
+            title_no = +($('#title_no').text().trim().replace(/\.$/, ''))
             _id = $(`.table-content ul li:nth-child(${title_no})`).attr('id').replace('No', '')
         } catch (err) {
-            console.log(`uploadPicture err: ${err}`)
+            console.log(`get_idNo err: ${err}`)
         }
+        return [_id, title_no]
+    }
+
+    $('.uploadPictureOfTitle-content form').on('submit', function (e) {
+        e.preventDefault()
+        let [_id, title_no] = get_idNo()
 
         const formData = new FormData(this)
         formData.append('_id', _id)
@@ -125,7 +137,7 @@ $(document).ready(() => {
                 toggleResponseTip('上传成功, 即将刷新页面', 3000)
                 idleModalCard()
                 setTimeout(() => {
-                    location.reload()
+                    window.location.href = `/TQ/${_id}/${title_no}`
                 }, 4000);
             },
             error: function (xhr, status, err) {
@@ -139,9 +151,9 @@ $(document).ready(() => {
         const switchSubject = $('.switchSubject-content')
         $.ajax({
             type: "GET",
-            url: 'subjectForm',
-            success: (result) => {
-                switchSubject.html(result)
+            url: '/subjectForm',
+            success: (res) => { 
+                switchSubject.html(res.html.switchSubjectContent)
                 activeModalCard('.switchSubject-content')
             }
         })
@@ -188,6 +200,8 @@ $(document).ready(() => {
         const chapter = $('#selectForChapter').val()
         const section = $('#selectForSection').val()
 
+        let [_id, title_no] = get_idNo()
+
         $.ajax({
             type: 'POST',
             contentType: 'application/json',
@@ -197,7 +211,7 @@ $(document).ready(() => {
             }),
             success: (result) => {
                 if (result.success == 1) {
-                    location.reload()
+                    window.location.href = `/TQ`
                 } else {
                     $('.switchSubject-content').html('')
                     console.log('here')
@@ -227,6 +241,9 @@ $(document).ready(() => {
             return
         }
         const instantJudge = $('#toggleSwitch').prop('checked')
+
+        let [_id, title_no] = get_idNo()
+
         $.ajax({
             type: 'POST',
             contentType: 'application/json',
@@ -235,7 +252,7 @@ $(document).ready(() => {
                 instantJudge: instantJudge
             }),
             success: () => {
-                location.reload()
+                window.location.href = `/TQ/${_id}/${title_no}`
             }
         })
     })

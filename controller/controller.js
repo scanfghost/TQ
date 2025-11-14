@@ -50,12 +50,19 @@ async function getTQPage(req, res) {
     const {titleModel, sectionRef} = await titleService.getTitleModel(subjectName, chapterName, sectionName)
     const result = await titleService.getUserAnswerOfAllTitle(titleModel, req.session.user.userEmail, sectionRef)
     const userSetting = await userSettingService.getUserSetting(req.session.user.userEmail)
-    const firstTitle = await titleService.getTitleById(titleModel, result[0]._id)
-    if (userSetting.instantJudge) {
-        const explanation = firstTitle.explanation
-        res.render('TQ', { titles: result, title: firstTitle, titleSize: result.length, No: 1, userSetting, subjectName, chapterName, sectionName, explanation })
+    let title, No
+    if (req.params._id) {
+        title = await titleService.getTitleById(titleModel, req.params._id)
+        No = req.params.No
     } else {
-        res.render('TQ', { titles: result, title: firstTitle, titleSize: result.length, No: 1, userSetting, subjectName, chapterName, sectionName })
+        title = await titleService.getTitleById(titleModel, result[0]._id)
+        No = 1
+    }
+    if (userSetting.instantJudge) {
+        const explanation = title.explanation
+        res.render('TQ', { titles: result, title, titleSize: result.length, No, userSetting, subjectName, chapterName, sectionName, explanation })
+    } else {
+        res.render('TQ', { titles: result, title, titleSize: result.length, No, userSetting, subjectName, chapterName, sectionName })
     }
 }
 
@@ -119,8 +126,10 @@ async function removeUserAnswer(req, res) {
 }
 
 async function submitSubjectForm(req, res) {
+    var formatRes = createFormatRes()
     const subjectNames = await titleService.getSubjectNames()
-    res.render('./partials/switchSubjectContent', { subjectNames })
+    formatRes.html.switchSubjectContent = await ejs.renderFile(templateDir + '/partials/switchSubjectContent.ejs', { subjectNames })
+    res.json(formatRes) 
 }
 
 async function getChapterNames(req, res) {

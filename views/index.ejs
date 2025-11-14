@@ -16,9 +16,10 @@
 
 <body>
     <div class="header theme-header">
-    <% if (session.userEmail) { %>
+        <img src="/favicon.ico">
+    <% if (session.user?.userEmail) { %>
         <button class="loginButton" id="TQ">
-            <%= session.userEmail %>
+            <%= session.user?.userEmail %>
         </button>
         <% } else { %>
         <button class="loginButton" id="loginButton">

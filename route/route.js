@@ -4,7 +4,7 @@ var controller = require('../controller/controller')
 var userSettingController = require('../controller/userSettingController')
 const {imgUpload} = require('../middleware/upload')
 
-router.get('/TQ', controller.getTQPage)
+router.get('/TQ{/:_id/:No}', controller.getTQPage)
 
 router.get('/', controller.getIndexPage)
 

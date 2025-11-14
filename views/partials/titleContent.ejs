@@ -16,5 +16,7 @@
         </ul>
 </div>
 <div class="titleImg-content">
-    <img src="/assets/img/<%= title.img %>" alt="">          
+    <% if (title.img) { %>
+        <img src="/assets/img/<%= title.img %>" alt="">
+      <% } %>    
 </div>
