@@ -1,5 +1,9 @@
 :root {
-  --H-SlideSwitch: 24px
+  --H-SlideSwitch: 24px;
+  --button-background-color: #ececed;
+  --button-hover-background-color: #d4d4d4;
+  --note-fence-color: rgb(66, 66, 66);
+  --note-backgroud-color: rgb(240, 240, 240);
 }
 
 body {
@@ -57,7 +61,6 @@ body {
   font-size: 20px;
   font-weight: 400;
   margin-top: 20px;
-  margin-bottom: 30px;
   line-height: 1.5;
   padding: 0 20px;
 }
@@ -68,6 +71,20 @@ body {
   }
 }
 
+.blank{
+  margin: 0 auto;
+  width: 95%;
+  height: 36px;
+  margin-top: 30px;
+}
+
+.blank >  div{
+  width: 100%;
+  height: 100%;
+  border-left: 3px solid var(--note-fence-color);
+  background-color: var(--note-backgroud-color);
+}
+
 .explanation-content {
   padding: 0 20px;
 }
@@ -75,6 +92,10 @@ body {
 .explanation-content .detail {
   text-indent: 2em;
   line-height: 2;
+}
+
+.choice{
+  margin-top: 30px;
 }
 
 .choice ul {

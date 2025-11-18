@@ -9,14 +9,10 @@ function createTitleService({ getTitleModel, userAnswerModel, historyAnswerModel
             }
         },
 
-        async getTitleById(titleModel, _id, excludeFields = []) {
-            const excludeStr = excludeFields.length
-                ? '-' + excludeFields.join(' -')
-                : ''
-
+        async getTitleById(titleModel, _id) {
             try {
                 const [titleDoc, userAnswerDoc] = await Promise.all([
-                    titleModel.findById(_id).select(excludeStr).lean(),
+                    titleModel.findById(_id).lean(),
                     userAnswerModel.findOne({ ftitleid: _id }).lean()
                 ])
 
@@ -29,6 +25,23 @@ function createTitleService({ getTitleModel, userAnswerModel, historyAnswerModel
             } catch (err) {
                 throw new Error(`getTitleById: ${err}`)
             }
+        },
+
+        isChoiceCorrect(pending, correct){
+            if (!Array.isArray(pending) || pending.length != correct.length) {
+                return false
+            }
+            for (let i = 0; i < correct.length; i++) {
+                if (pending[i].length != correct[i].length) {
+                    return false
+                }
+                for (let j = 0; j < correct[i].length; j++) {
+                    if (pending[i][j] != correct[i][j]) {
+                        return false
+                    }
+                }
+            }
+            return true
         },
 
         async getSubjectNames() {
@@ -99,7 +112,13 @@ function createTitleService({ getTitleModel, userAnswerModel, historyAnswerModel
                     {
                         $project: {
                             _id: 1,
-                            rightIndex: 1,
+                            choice: {
+                                $cond: {
+                                    if: {$eq: ["$type", "choice"]},
+                                    then: {rightOption: "$choice.rightOption"},
+                                    else: "$$REMOVE"
+                                }
+                            },
                             userAnswer: { $arrayElemAt: ["$userAnswer", 0] }
                         }
                     }

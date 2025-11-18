@@ -22,7 +22,7 @@
     <div class="content">
         <div class="QA">
             <div class="title-content">
-                <%- include('./partials/titleContent.ejs') -%>
+                <%- include('./partials/titleChoiceContent.ejs') -%>
             </div>
             <div class="explanation-content">
                 <% if(userSetting.instantJudge && title.userAnswer) {%>
@@ -39,7 +39,7 @@
                         if (oneTitle.userAnswer) { 
                             className+='answered' ; 
                             if (userSetting && userSetting.instantJudge) { 
-                                if(oneTitle.userAnswer.answerIndex===oneTitle.rightIndex) { 
+                                if(oneTitle.isChoiceCorrect) { 
                                     className +=' right' ; 
                                 } else {
                                     className +=' wrong' ; 

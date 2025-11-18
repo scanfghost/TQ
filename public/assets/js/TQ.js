@@ -18,7 +18,7 @@ $(document).ready(() => {
                 if (res.html.explanationContent) {
                     $('.explanation-content').html(res.html.explanationContent)
                 }
-                $('.title-content').html(res.html.titleContent)
+                $('.title-content').html(res.html.titleChoiceContent)
                 let [newid, newtitle_no] = get_idNo()
                 updateTitleInUrl(newid, newtitle_no)
             },
@@ -33,11 +33,18 @@ $(document).ready(() => {
     $(document).on('click', '.choice ul li', function () {
         const _id = $('.title')[0].id
         const relavantLi = $(`#No${_id}`)
-        const selected = this.id.replace('choice', '')
 
         if (relavantLi.hasClass('answered')) {
             return
         }
+
+        const optionType = $('.choice').data('type')
+        const blanks = $('.blank > div')
+
+        
+        const selected = this.id.replace('choice', '')
+
+        
 
         $(this).addClass('selected')
 

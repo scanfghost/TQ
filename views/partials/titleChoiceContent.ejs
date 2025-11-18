@@ -1,0 +1,84 @@
+<div class="title" id="<%= title._id %>">
+    <span id="title_no">
+        <%= No %>.
+    </span>
+    <%= title.choice.title %>
+</div>
+
+<div class="choice"  data-type="<%= title.choice.optionType %>">
+  <% 
+      var vertical = false 
+      if(title.choice.optionType == "shared") { 
+          title.choice.shared.forEach(option => { if(option.replace(/\s+/g, '').length > 6) { vertical=true} })
+      }else if(title.choice.optionType == "individual") {
+          outerLoop: for (const options of title.choice.individual) {
+              for (const option of options) {
+                if (option.replace(/\s+/g, '').length > 6) {
+                  vertical = true;
+                  break outerLoop; 
+                }
+              }
+          }
+      } 
+  %>
+  <% if (title.choice.optionType == "shared") { %>
+      <% 
+        const shared = title.choice.shared || []
+        const userOption = title.userAnswer?.userOption?.[0] || []
+        const count = Math.min(shared.length, 8)
+        const letters = ['A','B','C','D','E','F','G','H']
+      %>
+      <ul class="<%= vertical ? 'vertical' : '' %>">
+        <% for (let i = 0; i < count; i++) { %>
+          <li id="choice<%= i %>" class="<%= userOption.length != 0 && userOption.includes(i) ? 'selected' : '' %>">
+            <%= letters[i] %>. <%= shared[i] %>
+          </li>
+        <% } %>
+      </ul>
+  <% } %>
+
+  <% if (title.choice.optionType == "individual") { %>
+      <% 
+        const letters = ['A','B','C','D','E','F','G','H']
+        const individual = title.choice.individual || []
+      %>
+    
+      <% individual.forEach((options, groupIndex) => { %>
+        <div class="individual-group">
+          <ul class="<%= vertical ? 'vertical' : '' %>">
+            <% 
+              const groupOptions = options.slice(0, 8);
+              const groupUserOption = title.userAnswer?.userOption?.[groupIndex] || []
+            %>
+            <% groupOptions.forEach((text, optionIndex) => { %>
+              <%
+                const isSelected = groupUserOption.length != 0 && 
+                groupUserOption.includes(optionIndex)
+              %>
+              <li 
+                id="choice<%= groupIndex %>_<%= optionIndex %>" 
+                class="<%= isSelected ? 'selected' : '' %>"
+              >
+                <%= letters[optionIndex] %>. <%= text %>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      <% }); %>
+  <% } %>
+</div>
+
+<div class="blank">
+  <% 
+    const blankSize = rightOption.length 
+    for(let iblank = 1; iblank <= blankSize; iblank++){ 
+  %>
+      <div></div>
+  <% }   %>
+</div>
+
+<div class="titleImg-content">
+  <% if (title.choice.img) { %>
+      <img src="/assets/img/<%= title.choice.img %>" alt="">
+    <% } %>    
+</div>

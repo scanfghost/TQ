@@ -10,7 +10,7 @@ function createUserService({ userModel, userAnswerModel, ObjectId }) {
             }
         },
 
-        async saveUserChoice(titleModel, userEmail, sectionRef, _id, selected) {
+        async saveUserChoice(userEmail, sectionRef, _id, userOption) {
             const newfld = new ObjectId(_id)
             try {
                 await userAnswerModel.findOneAndUpdate(
@@ -21,7 +21,7 @@ function createUserService({ userModel, userAnswerModel, ObjectId }) {
                     {
                         $set: {
                             fcollection: sectionRef,
-                            answerIndex: selected
+                            userOption: userOption
                         }
                     },
                     {
@@ -31,13 +31,6 @@ function createUserService({ userModel, userAnswerModel, ObjectId }) {
                 )
             } catch (err) {
                 throw new Error(`saveUserChoice: ${err}`)
-            }
-
-            try {
-                const result = await titleModel.findById(_id)
-                return result.rightIndex == selected ? "right" : "wrong"
-            } catch (err) {
-                throw new Error(`saveUserChoice find choice err: ${err}`)
             }
         },
 

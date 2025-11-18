@@ -1,11 +1,7 @@
-const path = require('path')
-const ejs = require('ejs')
-const fs = require('fs').promises
 const ObjectId = require('mongoose').Types.ObjectId
-var service = require('../service/service')
+const service = require('../service/service')
 const createTitleService = require('../service/titleService')
 const createUserService = require('../service/userService')
-var userSettingService = require('../service/userSettingService')
 const {getTitleModel} = require('../model/Title')
 const userAnswerModel = require('../model/userAnswer')
 const subjectModel = require('../model/Subject')
@@ -13,9 +9,6 @@ const chapterModel = require('../model/Chapter')
 const userModel = require('../model/User')
 const historyAnswerModel = require('../model/HistoryAnswer')
 const {createFormatRes} = require('../common/formatRes')
-const {md5} = require('../common/md5')
-
-const templateDir = path.join(__dirname, '../views')
 
 const titleService = createTitleService({getTitleModel, userAnswerModel, historyAnswerModel, subjectModel, chapterModel})
 const userService = createUserService({userModel, userAnswerModel, ObjectId }) 
@@ -43,79 +36,6 @@ async function loginUser(req, res) {
     res.json(formatRes)
 }
 
-async function getTQPage(req, res) {
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
-    const {titleModel, sectionRef} = await titleService.getTitleModel(subjectName, chapterName, sectionName)
-    const result = await titleService.getUserAnswerOfAllTitle(titleModel, req.session.user.userEmail, sectionRef)
-    const userSetting = await userSettingService.getUserSetting(req.session.user.userEmail)
-    let title, No
-    if (req.params._id) {
-        title = await titleService.getTitleById(titleModel, req.params._id)
-        No = req.params.No
-    } else {
-        title = await titleService.getTitleById(titleModel, result[0]._id)
-        No = 1
-    }
-    if (userSetting.instantJudge) {
-        const explanation = title.explanation
-        res.render('TQ', { titles: result, title, titleSize: result.length, No, userSetting, subjectName, chapterName, sectionName, explanation })
-    } else {
-        res.render('TQ', { titles: result, title, titleSize: result.length, No, userSetting, subjectName, chapterName, sectionName })
-    }
-}
-
-async function getTitle(req, res) {
-    var formatRes = createFormatRes()
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
-    const {titleModel, sectionRef} = await titleService.getTitleModel(subjectName, chapterName, sectionName)
-    const titleDoc = await titleService.getTitleById(titleModel, req.params._id)
-    try {
-        formatRes.html.titleContent = await ejs.renderFile(templateDir + '/partials/titleContent.ejs', { title: titleDoc, No: req.query.No })
-        if (titleDoc.userAnswer) {
-            const userSetting = await userSettingService.getUserSetting(req.session.user.userEmail)
-            if (userSetting.instantJudge) {
-                // const explanation = await service.getExplanationById(req.params._id)
-                formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { explanation: titleDoc.explanation })
-            }
-        }
-    } catch (err) {
-        res.status(403)
-        formatRes.errMsg = 'getTitle: ' + err
-        res.json(formatRes)
-        return
-    }
-    res.json(formatRes)
-}
-
-async function submitChoice(req, res) {
-    var formatRes = createFormatRes()
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
-    const {titleModel, sectionRef} = await titleService.getTitleModel(subjectName, chapterName, sectionName)
-    var result = await userService.saveUserChoice(titleModel, req.session.user.userEmail, sectionRef, req.body._id, req.body.selected)
-    const userSetting = await userSettingService.getUserSetting(req.session.user.userEmail)
-    try {
-        if (userSetting.instantJudge) {
-            const explanation = await titleService.getExplanationById(titleModel, req.body._id)
-            formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { explanation })
-            formatRes.data.answer = result
-        } else {
-            formatRes.data.answer = "answered"
-        }
-    } catch (err) {
-        res.status(403)
-        formatRes.errMsg = 'getTitle: ' + err
-        res.json(formatRes)
-        return
-    }
-    res.json(formatRes)
-}
-
 async function removeUserAnswer(req, res) {
     const subjectName = req.session.user.currentSubject
     const chapterName = req.session.user.currentChapter
@@ -123,27 +43,6 @@ async function removeUserAnswer(req, res) {
     const sectionRef = await titleService.getSectionRef(subjectName, chapterName, sectionName)
     await service.deleteDoc('useranswer', { fcollection: sectionRef, fuseremail: req.session.user.userEmail })
     res.end()
-}
-
-async function submitSubjectForm(req, res) {
-    var formatRes = createFormatRes()
-    const subjectNames = await titleService.getSubjectNames()
-    formatRes.html.switchSubjectContent = await ejs.renderFile(templateDir + '/partials/switchSubjectContent.ejs', { subjectNames })
-    res.json(formatRes) 
-}
-
-async function getChapterNames(req, res) {
-    var formatRes = createFormatRes()
-    const chapterNames = await titleService.getChapterNames(req.query.subjectName)
-    formatRes.data.chapterNames = chapterNames
-    res.json(formatRes)
-}
-
-async function getSectionNames(req, res) {
-    var formatRes = createFormatRes()
-    const sectionNames = await titleService.getSectionNames(req.query.chapterName)
-    formatRes.data.sectionNames = sectionNames
-    res.json(formatRes)
 }
 
 async function modifyUserSubject(req, res) {
@@ -172,34 +71,12 @@ async function saveHistoryAnswer(req, res) {
     res.json(formatRes)
 }
 
-async function uploadPictureOfTitle(req, res) {
-    var formatRes = createFormatRes()
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
-    const {titleModel, sectionRef} = await titleService.getTitleModel(subjectName, chapterName, sectionName)
-    const result = await titleService.getTitleById(titleModel, req.body._id, ['explanation'])
-    const hashInput = result.title + JSON.stringify(result.choice)
-    const ext = path.extname(req.file.filename)
-    const hash = md5(hashInput, 12)
-    const newFilename = `${hash}${ext}`
-    const newFilePath = path.join(process.env.imgStoreFolder, newFilename)
-    await fs.rename(req.file.path, newFilePath)
-    titleService.modifyImgOfTitle(titleModel, req.body._id, newFilename)
-    res.end()
-}
+
 
 module.exports = {
     getIndexPage,
-    getTQPage,
-    getTitle,
-    getChapterNames,
-    getSectionNames,
-    submitChoice,
-    submitSubjectForm,
     removeUserAnswer,
     modifyUserSubject,
     loginUser,
-    saveHistoryAnswer,
-    uploadPictureOfTitle
+    saveHistoryAnswer
 }
