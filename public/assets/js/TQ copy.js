@@ -30,55 +30,7 @@ $(document).ready(() => {
         })
     })
 
-    function singleChoice() {
-        // 单空单选
-
-        const _id = $('.title')[0].id
-        const relavantLi = $(`#No${_id}`)
-
-        if (relavantLi.hasClass('right') || relavantLi.hasClass('wrong')) {
-            return
-        }
-
-        // 移除其他选中项
-        $(this).siblings().removeClass('selected')
-        // 添加当前选中项
-        $(this).addClass('selected')
-
-        const selected = this.id.replace('choice', '')
-        let userOption = [[selected]]
-
-        $.ajax({
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ userOption, _id }),
-            url: '/choice',
-            success: function (res) {
-                $('.explanation-content').html(res.html.explanationContent)
-                const answer = res.data.answer
-                if (answer == 'answered') {
-                    relavantLi.addClass('answered')
-                } else {
-                    relavantLi.addClass('answered')
-                    if (answer == 'right') {
-                        relavantLi.addClass('right')
-                    } else if (answer == 'wrong') {
-                        relavantLi.addClass('wrong')
-                    }
-                }
-            },
-            error: function (xhr, status, error) {
-                const errorData = JSON.parse(xhr.responseText)
-                console.log('服务端错误信息:', errorData.errMsg)
-            }
-        })
-    }
-
-    function singleMultipleChoice() {
-        // 单空多选
-        // 切换选中状态
-        $(this).toggleClass('selected')
-
+    $(document).on('click', '.choice ul li', function () {
         const _id = $('.title')[0].id
         const relavantLi = $(`#No${_id}`)
 
@@ -86,11 +38,17 @@ $(document).ready(() => {
             return
         }
 
-        // 获取所有选中的选项
-        const selectedOptions = []
-        $(this).parent().find('li.selected').each(function () {
-            selectedOptions.push(this.id.replace('choice', ''))
-        })
+        const optionType = $('.choice').data('type')
+        const blanks = $('.blank > div')
+
+        
+        const selected = this.id.replace('choice', '')
+
+        // 移除同一组的其他选中状态
+        $(this).siblings().removeClass('selected')
+        
+        // 添加选中效果
+        $(this).addClass('selected')
 
         relavantLi.removeClass('right')
         relavantLi.removeClass('wrong')
@@ -98,7 +56,7 @@ $(document).ready(() => {
         $.ajax({
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ userOption: selectedOptions, _id: _id }),
+            data: JSON.stringify({ selected, _id }),
             url: '/choice',
             success: function (res) {
                 $('.explanation-content').html(res.html.explanationContent)
@@ -119,85 +77,6 @@ $(document).ready(() => {
                 console.log('服务端错误信息:', errorData.errMsg)
             }
         })
-    }
-
-    function multipleSingleChoice() {
-        // 多空单选
-
-        const _id = $('.title')[0].id
-        const relavantLi = $(`#No${_id}`)
-
-        if (relavantLi.hasClass('right') || relavantLi.hasClass('wrong')) {
-            return
-        }
-
-        // 移除其他选中项
-        $(this).siblings().removeClass('selected')
-        // 添加当前选中项
-        $(this).addClass('selected')
-
-        const groupSize = $('.choice .individual-group').length;
-        const userOption = []
-        var selectedSize = 0
-
-        // 检查是否所有组都已选择
-        let allGroupsSelected = true;
-        for (let i = 0; i < groupSize; i++) {
-            userOption[i] = []
-            $(`.choice .individual-group:eq(${i}) ul li[id^="choice${i}_"]`).each(function () {
-                if ($(this).hasClass('selected')) {
-                    userOption[i].push(this.id.replace('choice' + i + '_', ''))
-                    selectedSize++
-                }
-            })
-        }
-        if (selectedSize !== groupSize) {
-            allGroupsSelected = false
-        }
-
-        // 如果所有组都已选择，才提交答案
-        if (allGroupsSelected) {
-            $.ajax({
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ userOption: userOption, _id: _id }),
-                url: '/choice',
-                success: function (res) {
-                    $('.explanation-content').html(res.html.explanationContent)
-                    const answer = res.data.answer
-                    if (answer == 'answered') {
-                        relavantLi.addClass('answered')
-                    } else {
-                        relavantLi.addClass('answered')
-                        if (answer == 'right') {
-                            relavantLi.addClass('right')
-                        } else if (answer == 'wrong') {
-                            relavantLi.addClass('wrong')
-                        }
-                    }
-                },
-                error: function (xhr, status, error) {
-                    const errorData = JSON.parse(xhr.responseText)
-                    toggleResponseTip(errorData.errMsg, 4000)
-                    console.log('服务端错误信息:', errorData.errMsg)
-                }
-            })
-        }
-    }
-
-    $(document).on('click', '.choice ul li', function () {
-        const blankType = $('.title').data('blank-type')
-
-        if (blankType === 'single') {
-            // 单空单选
-            singleChoice.call(this)
-        } else if (blankType === 'singlemultiple') {
-            // 单空多选
-            singleMultipleChoice.call(this)
-        } else if (blankType === 'multiplesingle') {
-            // 多空单选
-            multipleSingleChoice.call(this)
-        }
     })
 
     $('.float-btn').on('click', function () {
@@ -257,7 +136,6 @@ $(document).ready(() => {
 
         const formData = new FormData(this)
         formData.append('_id', _id)
-        
         $.ajax({
             type: 'POST',
             contentType: false,
@@ -283,7 +161,7 @@ $(document).ready(() => {
         $.ajax({
             type: "GET",
             url: '/subjectForm',
-            success: (res) => {
+            success: (res) => { 
                 switchSubject.html(res.html.switchSubjectContent)
                 activeModalCard('.switchSubject-content')
             }

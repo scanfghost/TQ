@@ -27,8 +27,12 @@ $(document).ready(() => {
                         window.location.href = res.data.url
                     }, 3000);
                 } else {
-                    toggleResponseTip("登录失败: " + res.errMsg, 2000)
+                    toggleResponseTip("登录失败: " + res.errMsg, 4000)
                 }
+            },
+            error: function (xhr, status, error) {
+                const errorMsg = xhr.responseJSON?.errMsg || error
+                toggleResponseTip("登录失败: " + errorMsg, 4000)
             }
         })
     })

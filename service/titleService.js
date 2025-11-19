@@ -1,207 +1,230 @@
+const {getTitleModel} = require('../dao/TitleDao')
+const userAnswerDao = require('../dao/UserAnswerDao')
+const historyAnswerDao = require('../dao/HistoryAnswerDao')
+const subjectDao = require('../dao/SubjectDao')
+const chapterDao = require('../dao/ChapterDao')
+const {TitleDto, TitleCreateDto, ChoiceOption} = require('../dto/TitleDto')
 
-function createTitleService({ getTitleModel, userAnswerModel, historyAnswerModel, subjectModel, chapterModel }) {
-    return {
-        async getSizeOfAllTitle(Title) {
-            try {
-                return await Title.countDocuments()
-            } catch (err) {
-                throw new Error(`getSizeOfAllTitle: ${err}`)
-            }
-        },
-
-        async getTitleById(titleModel, _id) {
-            try {
-                const [titleDoc, userAnswerDoc] = await Promise.all([
-                    titleModel.findById(_id).lean(),
-                    userAnswerModel.findOne({ ftitleid: _id }).lean()
-                ])
-
-                if (!titleDoc) {
-                    throw new Error(`题目不存在`)
-                }
-
-                titleDoc.userAnswer = userAnswerDoc
-                return titleDoc
-            } catch (err) {
-                throw new Error(`getTitleById: ${err}`)
-            }
-        },
-
-        isChoiceCorrect(pending, correct){
-            if (!Array.isArray(pending) || pending.length != correct.length) {
-                return false
-            }
-            for (let i = 0; i < correct.length; i++) {
-                if (pending[i].length != correct[i].length) {
-                    return false
-                }
-                for (let j = 0; j < correct[i].length; j++) {
-                    if (pending[i][j] != correct[i][j]) {
-                        return false
-                    }
-                }
-            }
-            return true
-        },
-
-        async getSubjectNames() {
-            try {
-                const result = await subjectModel.find({}).select('subject').lean()
-                return result.map(doc => doc.subject)
-            } catch (err) {
-                throw new Error(`getSubjectNames: ${err}`)
-            }
-        },
-
-        async getChapterNames(subjectName) {
-            try {
-                const result = await subjectModel.findOne({ subject: subjectName }).lean()
-                return Object.keys(result.chapters)
-            } catch (err) {
-                throw new Error(`getChapterNames: ${err}`)
-            }
-        },
-
-        async getSectionNames(chapterName) {
-            try {
-                const result = await chapterModel.findOne({ chapter: chapterName })
-                return Array.from(result.sections.keys())
-            } catch (err) {
-                throw new Error(`getSectionNames: ${err}`)
-            }
-        },
-
-        async getSectionRef(subjectName, chapterName, sectionName) {
-            const subject = await subjectModel.findOne({ subject: subjectName }).lean()
-            const chapter = await chapterModel.findOne({ _id: subject.chapters[chapterName] }).lean()
-            return chapter.sections[sectionName]
-        },
-
-        async getExplanationById(titleModel, _id) {
-            try {
-                const result = await titleModel.findById(_id).select('explanation').lean()
-                return result.explanation
-            } catch (err) {
-                throw new Error(`getExplanationById: ${err}`)
-            }
-        },
-
-        async getUserAnswerOfAllTitle(titleModel, userEmail, sectionRef) {
-            try {
-                var result = await titleModel.aggregate([
-                    {
-                        $lookup: {
-                            from: userAnswerModel.collection.collectionName,
-                            let: { titleId: "$_id" },
-                            pipeline: [
-                                {
-                                    $match: {
-                                        $expr: {
-                                            $and: [
-                                                { $eq: ["$fcollection", sectionRef] },
-                                                { $eq: ["$ftitleid", "$$titleId"] },
-                                                { $eq: ["$fuseremail", userEmail] }
-                                            ]
-                                        }
-                                    }
-                                }
-                            ],
-                            as: "userAnswer"
-                        }
-                    },
-                    {
-                        $project: {
-                            _id: 1,
-                            choice: {
-                                $cond: {
-                                    if: {$eq: ["$type", "choice"]},
-                                    then: {rightOption: "$choice.rightOption"},
-                                    else: "$$REMOVE"
-                                }
-                            },
-                            userAnswer: { $arrayElemAt: ["$userAnswer", 0] }
-                        }
-                    }
-                ])
-                if (result.length == 0) {
-                    console.log(`getUserAnswerOfAllTitle: cannot find by collection of ${sectionRef}`)
-                }
-
-                return result
-            } catch (err) {
-                throw new Error(`getUserAnswerOfAllTitle: ${err}`)
-            }
-        },
-
-        async getTitleModel(subjectName, chapterName, sectionName) {
-            const sectionRef = await this.getSectionRef(subjectName, chapterName, sectionName)
-            const titleModel = getTitleModel(sectionRef)
-            return { titleModel, sectionRef }
-        },
-
-        async saveHistoryAnswer(userEmail, sectionRef) {
-            try {
-                const filter = {
-                    fuseremail: userEmail,
-                    fcollection: sectionRef
-                }
-
-                const titleModel = getTitleModel(sectionRef)
-                const [result, total] = await Promise.all([
-                    userAnswerModel.find(filter).select('ftitleid answerIndex -_id').lean(),
-                    titleModel.countDocuments()
-                ])
-
-                if (result.length < total) {
-                    return [-1, "还有题目未完成"]
-                }
-
-                const sortedResult = result.sort((a, b) => {
-                    if (typeof a.ftitleid == 'string' && typeof b.ftitleid == 'string') {
-                        return a.ftitleid.localeCompare(b.ftitleid)
-                    }
-                    return a.ftitleid - b.ftitleid
-                })
-
-                const qaArray = sortedResult.map(item => [item.ftitleid, item.answerIndex])
-
-                const exists = await historyAnswerModel.findOne({
-                    fuseremail: userEmail,
-                    fcollection: sectionRef,
-                    qa: { $eq: qaArray }
-                }).select('_id').lean()
-
-                //code 1: insert success, 0: dulpulate, -1: fail
-                if (exists) {
-                    return [0, "已存在和现在答题情况相同版本"]
-                }
-
-                const historyData = {
-                    fcollection: sectionRef,
-                    fuseremail: userEmail,
-                    qa: qaArray
-                }
-
-                await historyAnswerModel.create(historyData)
-
-                return [1, "提交成功"]
-            } catch (err) {
-                throw new Error(`saveHistoryAnswer: ${err}`)
-            }
-        },
-
-        async modifyImgOfTitle(titleModel, _id, imgName) {
-            try {
-                const result = await titleModel.findOneAndUpdate(
-                    { _id },
-                    { img: imgName }
-                ).lean()
-                return result
-            } catch (err) {
-                throw new Error(`modifyImgOfTitle: ${err}`)
-            }
-        }
+async function getSizeOfAllTitle(collectionName) {
+    try {
+        const titleDao = getTitleModel(collectionName)
+        return await titleDao.countDocuments()
+    } catch (err) {
+        throw new Error(`getSizeOfAllTitle: ${err}`)
     }
 }
 
-module.exports = createTitleService
+async function getTitleById(collectionName, _id) {
+    try {
+        const titleDao = getTitleModel(collectionName)
+        const [titleDoc, userAnswerDoc] = await Promise.all([
+            titleDao.findById(_id).lean(),
+            userAnswerDao.findOne({ ftitleid: _id }).lean()
+        ])
+
+        if (!titleDoc) {
+            throw new Error(`题目不存在`)
+        }
+
+        titleDoc.userAnswer = userAnswerDoc
+        return new TitleDto(titleDoc)
+    } catch (err) {
+        throw new Error(`getTitleById: ${err}`)
+    }
+}
+
+/**
+ * 检查选择题答案是否正确
+ * @param {Array<Array<Number>>} pending - 待检查的用户答案
+ * @param {Array<Array<Number>>} correct - 正确答案
+ * @returns {Boolean} - 是否正确
+ */
+function isChoiceCorrect(pending, correct){
+    if (!Array.isArray(pending) || pending.length != correct.length) {
+        return false
+    }
+    
+    for (let i = 0; i < correct.length; i++) {
+        if (pending[i].length != correct[i].length) {
+            return false
+        }
+        for (let j = 0; j < correct[i].length; j++) {
+            if (pending[i][j] != correct[i][j]) {
+                return false
+            }
+        }
+    }
+    return true
+}
+
+async function getSubjectNames() {
+    try {
+        const result = await subjectDao.find({}).select('subject').lean()
+        return result.map(doc => doc.subject)
+    } catch (err) {
+        throw new Error(`getSubjectNames: ${err}`)
+    }
+}
+
+async function getChapterNames(subjectName) {
+    try {
+        const result = await subjectDao.findOne({ subject: subjectName }).lean()
+        return Object.keys(result.chapters)
+    } catch (err) {
+        throw new Error(`getChapterNames: ${err}`)
+    }
+}
+
+async function getSectionNames(chapterName) {
+    try {
+        const result = await chapterDao.findOne({ chapter: chapterName })
+        return Array.from(result.sections.keys())
+    } catch (err) {
+        throw new Error(`getSectionNames: ${err}`)
+    }
+}
+
+async function getSectionRef(subjectName, chapterName, sectionName) {
+    const subject = await subjectDao.findOne({ subject: subjectName }).lean()
+    const chapter = await chapterDao.findOne({ _id: subject.chapters[chapterName] }).lean()
+    return chapter.sections[sectionName]
+}
+
+async function getExplanationById(collectionName, _id) {
+    // try {
+    //     const titleDao = getTitleModel(collectionName)
+    //     const result = await titleDao.findById(_id).select('explanation').lean()
+    //     return result.explanation
+    // } catch (err) {
+    //     throw new Error(`getExplanationById: ${err}`)
+    // }
+}
+
+async function getUserAnswerOfAllChoiceTitle(collectionName, userEmail) {
+    try {
+        const titleDao = getTitleModel(collectionName)
+        var result = await titleDao.aggregate([
+            {
+                $lookup: {
+                    from: userAnswerDao.collection.collectionName,
+                    let: { titleId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$fcollection", collectionName] },
+                                        { $eq: ["$ftitleid", "$$titleId"] },
+                                        { $eq: ["$fuseremail", userEmail] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: "userAnswer"
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    choice: {
+                        $cond: {
+                            if: {$eq: ["$type", "choice"]},
+                            then: {
+                                rightOption: "$choice.rightOption",
+                                optionType: "$choice.optionType"
+                            },
+                            else: "$$REMOVE"
+                        }
+                    },
+                    userAnswer: { $arrayElemAt: ["$userAnswer", 0] }
+                }
+            }
+        ])
+        if (result.length == 0) {
+            console.log(`getUserAnswerOfAllChoiceTitle: cannot find by collection of ${collectionName}`)
+        }
+
+        return result.map(doc => new TitleDto(doc))
+    } catch (err) {
+        throw new Error(`getUserAnswerOfAllChoiceTitle: ${err}`)
+    }
+}
+
+async function saveHistoryAnswer(userEmail, collectionName) {
+    try {
+        const filter = {
+            fuseremail: userEmail,
+            fcollection: collectionName
+        }
+
+        const titleDao = getTitleModel(collectionName)
+        const [result, total] = await Promise.all([
+            userAnswerDao.find(filter).select('ftitleid answerIndex -_id').lean(),
+            titleDao.countDocuments()
+        ])
+
+        if (result.length < total) {
+            return [-1, "还有题目未完成"]
+        }
+
+        const sortedResult = result.sort((a, b) => {
+            if (typeof a.ftitleid == 'string' && typeof b.ftitleid == 'string') {
+                return a.ftitleid.localeCompare(b.ftitleid)
+            }
+            return a.ftitleid - b.ftitleid
+        })
+
+        const qaArray = sortedResult.map(item => [item.ftitleid, item.answerIndex])
+
+        const exists = await historyAnswerDao.findOne({
+            fuseremail: userEmail,
+            fcollection: collectionName,
+            qa: { $eq: qaArray }
+        }).select('_id').lean()
+
+        //code 1: insert success, 0: dulpulate, -1: fail
+        if (exists) {
+            return [0, "已存在和现在答题情况相同版本"]
+        }
+
+        const historyData = {
+            fcollection: collectionName,
+            fuseremail: userEmail,
+            qa: qaArray
+        }
+
+        await historyAnswerDao.create(historyData)
+
+        return [1, "提交成功"]
+    } catch (err) {
+        throw new Error(`saveHistoryAnswer: ${err}`)
+    }
+}
+
+async function modifyImgOfTitle(collectionName, _id, imgName) {
+    try {
+        const titleDao = getTitleModel(collectionName)
+        const result = await titleDao.findOneAndUpdate(
+            { _id },
+            { 'choice.img': imgName }
+        ).lean()
+        return result
+    } catch (err) {
+        throw new Error(`modifyImgOfTitle: ${err}`)
+    }
+}
+
+module.exports = {
+    getSizeOfAllTitle,
+    getTitleById,
+    isChoiceCorrect,
+    getSubjectNames,
+    getChapterNames,
+    getSectionNames,
+    getSectionRef,
+    getExplanationById,
+    getUserAnswerOfAllChoiceTitle,
+    saveHistoryAnswer,
+    modifyImgOfTitle
+}

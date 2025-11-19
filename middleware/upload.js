@@ -1,7 +1,7 @@
 const multer = require('multer')
 const path = require('path')
 
-const imgUploadPath = path.join(process.env.rootUploadFolder, '\\img')
+const imgUploadPath = path.join(process.env.rootUploadFolder, 'img')
 const ALLOWED_IMGS = ['.jpg', '.jpeg', '.png']
 
 const imgStorage = multer.diskStorage({

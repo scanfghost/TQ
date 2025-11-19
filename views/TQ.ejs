@@ -25,21 +25,21 @@
                 <%- include('./partials/titleChoiceContent.ejs') -%>
             </div>
             <div class="explanation-content">
-                <% if(userSetting.instantJudge && title.userAnswer) {%>
+                <% if(userSetting.instantJudge && titleDto.userAnswer) {%>
                     <%- include('./partials/explanationContent.ejs') -%>
                 <% } %>
             </div>
         </div>
         <div class="table-content">
             <ul>
-                <% for(var i=1; i <=titleSize; i++){ %>
+                <% for(var i=1; i <=titleDtoList.length; i++){ %>
                     <% 
-                        const oneTitle=titles[i - 1]; 
+                        const oneTitle=titleDtoList[i - 1]; 
                         let className='' ; 
                         if (oneTitle.userAnswer) { 
                             className+='answered' ; 
                             if (userSetting && userSetting.instantJudge) { 
-                                if(oneTitle.isChoiceCorrect) { 
+                                if(oneTitle.userAnswer.isChoiceCorrect) { 
                                     className +=' right' ; 
                                 } else {
                                     className +=' wrong' ; 
@@ -47,7 +47,7 @@
                             } 
                         } 
                     %>
-                        <li id="No<%= titles[i-1]._id %>" class="<%= className %>">
+                        <li id="No<%= titleDtoList[i-1]._id %>" class="<%= className %>">
                             <%= i %>
                         </li>
                         <% } %>

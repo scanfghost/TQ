@@ -1,8 +1,8 @@
-var UserSetting = require('../model/UserSetting')
+var UserSettingDao = require('../dao/UserSettingDao')
 
 async function getUserSetting(userEmail) {
     try {
-        const result = await UserSetting.findOne({userEmail: userEmail})
+        const result = await UserSettingDao.findOne({userEmail: userEmail})
         return result
     } catch (err) {
         console.log('getUserSetting err: ' + err)
@@ -10,7 +10,7 @@ async function getUserSetting(userEmail) {
 }
 
 function modifyInstantJudge(userEmail, instantJudge) {
-    UserSetting.findOneAndUpdate(
+    UserSettingDao.findOneAndUpdate(
         {userEmail: userEmail},
         {instantJudge: instantJudge}
     )

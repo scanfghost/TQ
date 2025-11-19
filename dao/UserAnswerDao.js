@@ -9,7 +9,8 @@ var userAnswerSchema = new mongoose.Schema({
         enum: ["choice", "fill", "answer"],
         required: true
     },
-    userOption: [[Number]]
+    userOption: [[Number]],
+    isChoiceCorrect: Boolean
 })
 
 module.exports = mongoose.model('UserAnwser', userAnswerSchema, 'useranswer')

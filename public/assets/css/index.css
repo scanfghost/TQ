@@ -72,6 +72,19 @@ body{
 
 .login-content form{
     padding: 10px;
+    height: 100%;
+}
+
+.login-content form input{
+    display: block;
+    width: 70%;
+    height: 20px;
+    margin-top: 20px;
+}
+
+#submitLoginButton{
+    margin: 20px auto 0 auto;
+    width: 40%;
 }
 
 .loginButton{
