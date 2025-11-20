@@ -2,7 +2,7 @@
     <span id="title_no">
         <%= No %>.
     </span>
-    <%= titleDto.title %>
+    <%- titleDto.title.replace(/(\\n|\n)/g, '<br>') %>
 </div>
 
 <div class="choice"  data-type="<%= titleDto.optionType %>">

@@ -58,7 +58,8 @@ app.use(session({
         maxAge: 1000 * 60 * 60,
         httpOnly: true,
         secure: false
-    }
+    },
+    rolling: true
 }))
 app.use(authMiddleware.auth)
 app.use(authMiddleware.adminOnly)

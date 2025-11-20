@@ -160,7 +160,7 @@ async function saveHistoryAnswer(userEmail, collectionName) {
 
         const titleDao = getTitleModel(collectionName)
         const [result, total] = await Promise.all([
-            userAnswerDao.find(filter).select('ftitleid answerIndex -_id').lean(),
+            userAnswerDao.find(filter).select('ftitleid userOption').lean(),
             titleDao.countDocuments()
         ])
 
@@ -175,7 +175,7 @@ async function saveHistoryAnswer(userEmail, collectionName) {
             return a.ftitleid - b.ftitleid
         })
 
-        const qaArray = sortedResult.map(item => [item.ftitleid, item.answerIndex])
+        const qaArray = sortedResult.map(item => [item.ftitleid, item.userOption])
 
         const exists = await historyAnswerDao.findOne({
             fuseremail: userEmail,
