@@ -52,7 +52,7 @@ async function validateUser(userEmail, userPasswd) {
 
 async function modifyUserSubject(userEmail, newSubject, newChapter, newSection) {
     try {
-        const result = await userModel.findOneAndUpdate(
+        const result = await userDao.findOneAndUpdate(
             { userEmail: userEmail },
             {
                 currentSubject: newSubject,

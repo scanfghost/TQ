@@ -29,6 +29,7 @@ class TitleDto {
         this.options = null;
         this.rightOption = null;
         this.explanation = null;
+        this.explanImg = null;
         this.img = null;
         this.blankSize = null;
         this.isChoiceCorrect = null;
@@ -59,6 +60,7 @@ class TitleDto {
         this.title = choiceData.title || '';
         this.optionType = choiceData.optionType || ''; // "shared" 或 "individual"
         this.explanation = choiceData.explanation || '';
+        this.explanImg = choiceData.explanImg || '';
         this.img = choiceData.img || '';
         this.rightOption = choiceData.rightOption || [];
         this.blankSize = choiceData.rightOption.length || 0;

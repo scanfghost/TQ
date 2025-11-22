@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="/assets/css/slideSwitch.css">
     <link rel="stylesheet" href="/assets/css/modalCard.css">
     <link rel="stylesheet" href="/assets/css/responseTip.css">
-    <link rel="stylesheet" href="/assets/css/uploadPictureOfTitleContent.css">
     <script src="/assets/js/TQ.js" type="module"></script>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>www.TQ.org</title>
@@ -69,8 +68,9 @@
             </div>
             <div class="action actions-item" id="selectSubject">选择科目与章节</div>
             <div class="action actions-item" id="saveAnswer">提交作答版本</div>
+            <div class="action actions-item" id="uploadPictureOfTitle">添加题干图片</div>
+            <div class="action actions-item" id="uploadPictureOfExplan">添加解释图片</div>
             <div class="action actions-item" id="restartAnswer">重新做题</div>
-            <div class="action actions-item" id="uploadPictureOfTitle">添加图片</div>
             <div class="action actions-item" id="setting">偏好设置</div>
         </div>
     </div>
@@ -85,6 +85,14 @@
         <form>
             <div></div>
             <input type="file" name="picture" id="inputPictureOfTitle" required>
+            <input type="submit" value="上传">
+        </form>
+    </div>
+
+    <div class="uploadPictureOfExplan-content modalCard">
+        <form>
+            <div></div>
+            <input type="file" name="picture" id="inputPictureOfExplan" required>
             <input type="submit" value="上传">
         </form>
     </div>

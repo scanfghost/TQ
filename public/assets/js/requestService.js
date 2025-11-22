@@ -1,0 +1,106 @@
+function fetchTitle(_id, No) {
+    return $.ajax({
+        type: 'GET',
+        url: '/title/' + _id + "?No=" + encodeURIComponent(No)
+    })
+}
+
+function submitChoice(_id, userOption) {
+    return $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ userOption, _id }),
+        url: '/choice'
+    })
+}
+
+function deleteAnswer() {
+    return $.ajax({
+        type: 'DELETE',
+        url: '/restartAnswer',
+    })
+}
+
+function saveHistoryAnswer() {
+    return $.ajax({
+        type: 'POST',
+        url: '/saveHistoryAnswer',
+    })
+}
+
+function uploadPictureOfTitle(formData) {
+    return $.ajax({
+        type: 'POST',
+        contentType: false,
+        url: '/uploadPictureOfTitle',
+        data: formData,
+        processData: false
+    })
+}
+
+function uploadPictureOfExplan(formData) {
+    return $.ajax({
+        type: 'POST',
+        contentType: false,
+        url: '/uploadPictureOfExplan',
+        data: formData,
+        processData: false
+    })
+}
+
+function modifyUserSetting(instantJudge) {
+    return $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        url: '/modifyUserSetting/',
+        data: JSON.stringify({
+            instantJudge
+        }),
+    })
+}
+
+function modifyUserSubject(subject, chapter, section) {
+    return $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        url: '/modifyUserSubject',
+        data: JSON.stringify({
+            subject, chapter, section
+        }),
+    })
+}
+
+function fetchSubjectForm() {
+    return $.ajax({
+        type: "GET",
+        url: '/subjectForm',
+    })
+}
+
+function fetchChapterNames(subject) {
+    return $.ajax({
+        type: "GET",
+        url: '/chapterNames' + '?subjectName=' + subject,
+    })
+}
+
+function fetchSectionNames(chapterName) {
+    return $.ajax({
+        type: "GET",
+        url: '/sectionNames' + '?chapterName=' + chapterName,
+    })
+}
+
+export default {
+    fetchTitle,
+    submitChoice,
+    deleteAnswer,
+    saveHistoryAnswer,
+    uploadPictureOfTitle,
+    uploadPictureOfExplan,
+    modifyUserSetting,
+    modifyUserSubject,
+    fetchSubjectForm,
+    fetchChapterNames,
+    fetchSectionNames,
+}

@@ -29,6 +29,8 @@ router.post('/saveHistoryAnswer', controller.saveHistoryAnswer)
 
 router.post('/uploadPictureOfTitle', imgUpload.single('picture'), titleController.uploadPictureOfTitle)
 
+router.post('/uploadPictureOfExplan', imgUpload.single('picture'), titleController.uploadPictureOfExplan)
+
 router.delete('/restartAnswer', controller.removeUserAnswer)
 
 module.exports = router

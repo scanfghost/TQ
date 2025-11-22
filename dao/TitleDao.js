@@ -17,6 +17,7 @@ var titleSchema = new mongoose.Schema({
         individual: [[String]],
         rightOption: [[Number]],
         explanation: String,
+        explanImg: String,
         img: String
     }
 })

@@ -1,202 +1,24 @@
 import { activeModalCard, idleModalCard } from './modalCard.js'
-import { toggleResponseTip } from './responseTip.js'
+
+import rh from './requestHandler.js'
 
 $(document).ready(() => {
-    function updateTitleInUrl(newid, newNo) {
-        const newPath = `/TQ/${newid}/${newNo}`
-        history.replaceState({ questionNum: newNo }, '', newPath)
-    }
-
     $(document).on('click', '.table-content ul li', function () {
-        let _id = this.id.replace('No', '')
-        const text = $(this).text().trim()
-        $.ajax({
-            type: 'GET',
-            url: '/title/' + _id + "?No=" + encodeURIComponent(text),
-            success: (res) => {
-                $('.explanation-content').html('')
-                if (res.html.explanationContent) {
-                    $('.explanation-content').html(res.html.explanationContent)
-                }
-                $('.title-content').html(res.html.titleChoiceContent)
-                let [newid, newtitle_no] = get_idNo()
-                updateTitleInUrl(newid, newtitle_no)
-            },
-            error: (xhr, status, err) => {
-                const errorData = JSON.parse(xhr.responseText)
-                toggleResponseTip(`服务端错误信息: errorData.errMsg`)
-                console.log('服务端错误信息:', errorData.errMsg)
-            }
-        })
+        rh.fetchTitle.call(this)
     })
-
-    function singleChoice() {
-        // 单空单选
-
-        const _id = $('.title')[0].id
-        const relavantLi = $(`#No${_id}`)
-
-        if (relavantLi.hasClass('right') || relavantLi.hasClass('wrong')) {
-            return
-        }
-
-        // 移除其他选中项
-        $(this).siblings().removeClass('selected')
-        // 添加当前选中项
-        $(this).addClass('selected')
-
-        const selected = this.id.replace('choice', '')
-        let userOption = [[selected]]
-
-        $.ajax({
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ userOption, _id }),
-            url: '/choice',
-            success: function (res) {
-                $('.explanation-content').html(res.html.explanationContent)
-                const answer = res.data.answer
-                if (answer == 'answered') {
-                    relavantLi.addClass('answered')
-                } else {
-                    relavantLi.addClass('answered')
-                    if (answer == 'right') {
-                        relavantLi.addClass('right')
-                    } else if (answer == 'wrong') {
-                        relavantLi.addClass('wrong')
-                    }
-                }
-            },
-            error: function (xhr, status, error) {
-                const errorData = JSON.parse(xhr.responseText)
-                console.log('服务端错误信息:', errorData.errMsg)
-            }
-        })
-    }
-
-    function singleMultipleChoice() {
-        // 单空多选
-        // 切换选中状态
-        $(this).toggleClass('selected')
-
-        const _id = $('.title')[0].id
-        const relavantLi = $(`#No${_id}`)
-
-        if (relavantLi.hasClass('answered')) {
-            return
-        }
-
-        // 获取所有选中的选项
-        const selectedOptions = []
-        $(this).parent().find('li.selected').each(function () {
-            selectedOptions.push(this.id.replace('choice', ''))
-        })
-
-        relavantLi.removeClass('right')
-        relavantLi.removeClass('wrong')
-
-        $.ajax({
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ userOption: selectedOptions, _id: _id }),
-            url: '/choice',
-            success: function (res) {
-                $('.explanation-content').html(res.html.explanationContent)
-                const answer = res.data.answer
-                if (answer == 'answered') {
-                    relavantLi.addClass('answered')
-                } else {
-                    relavantLi.addClass('answered')
-                    if (answer == 'right') {
-                        relavantLi.addClass('right')
-                    } else if (answer == 'wrong') {
-                        relavantLi.addClass('wrong')
-                    }
-                }
-            },
-            error: function (xhr, status, error) {
-                const errorData = JSON.parse(xhr.responseText)
-                console.log('服务端错误信息:', errorData.errMsg)
-            }
-        })
-    }
-
-    function multipleSingleChoice() {
-        // 多空单选
-
-        const _id = $('.title')[0].id
-        const relavantLi = $(`#No${_id}`)
-
-        if (relavantLi.hasClass('right') || relavantLi.hasClass('wrong')) {
-            return
-        }
-
-        // 移除其他选中项
-        $(this).siblings().removeClass('selected')
-        // 添加当前选中项
-        $(this).addClass('selected')
-
-        const groupSize = $('.choice .individual-group').length;
-        const userOption = []
-        var selectedSize = 0
-
-        // 检查是否所有组都已选择
-        let allGroupsSelected = true;
-        for (let i = 0; i < groupSize; i++) {
-            userOption[i] = []
-            $(`.choice .individual-group:eq(${i}) ul li[id^="choice${i}_"]`).each(function () {
-                if ($(this).hasClass('selected')) {
-                    userOption[i].push(this.id.replace('choice' + i + '_', ''))
-                    selectedSize++
-                }
-            })
-        }
-        if (selectedSize !== groupSize) {
-            allGroupsSelected = false
-        }
-
-        // 如果所有组都已选择，才提交答案
-        if (allGroupsSelected) {
-            $.ajax({
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ userOption: userOption, _id: _id }),
-                url: '/choice',
-                success: function (res) {
-                    $('.explanation-content').html(res.html.explanationContent)
-                    const answer = res.data.answer
-                    if (answer == 'answered') {
-                        relavantLi.addClass('answered')
-                    } else {
-                        relavantLi.addClass('answered')
-                        if (answer == 'right') {
-                            relavantLi.addClass('right')
-                        } else if (answer == 'wrong') {
-                            relavantLi.addClass('wrong')
-                        }
-                    }
-                },
-                error: function (xhr, status, error) {
-                    const errorData = JSON.parse(xhr.responseText)
-                    toggleResponseTip(errorData.errMsg, 4000)
-                    console.log('服务端错误信息:', errorData.errMsg)
-                }
-            })
-        }
-    }
 
     $(document).on('click', '.choice ul li', function () {
         const blankType = $('.title').data('blank-type')
 
         if (blankType === 'single') {
             // 单空单选
-            singleChoice.call(this)
+            rh.singleChoice.call(this)
         } else if (blankType === 'singlemultiple') {
             // 单空多选
-            singleMultipleChoice.call(this)
+            rh.singleMultipleChoice.call(this)
         } else if (blankType === 'multiplesingle') {
             // 多空单选
-            multipleSingleChoice.call(this)
+            rh.multipleSingleChoice.call(this)
         }
     })
 
@@ -205,187 +27,59 @@ $(document).ready(() => {
     });
 
     $('#restartAnswer').on('click', function () {
-        if (!confirm("重新做题不保留记录，是否继续?")) {
-            return
-        }
-
-        $.ajax({
-            type: 'DELETE',
-            url: '/restartAnswer',
-            success: () => {
-                location.reload()
-            }
-        })
+        rh.deleteAnswer().call(this)
     })
 
     $('#saveAnswer').on('click', function () {
-
-        $.ajax({
-            type: 'POST',
-            url: '/saveHistoryAnswer',
-            success: (res) => {
-                toggleResponseTip(res.data.message, 4000)
-            },
-            error: (xhr, status, err) => {
-                const errorData = JSON.parse(xhr.responseText)
-                toggleResponseTip(errorData.errMsg, 4000)
-            }
-        })
+        rh.saveHistoryAnswer().call(this)
     })
 
     $('#uploadPictureOfTitle').on('click', function () {
         const title_no = $('#title_no').text().trim().replace(/\.$/, '')
         const p = $('.uploadPictureOfTitle-content')
-        p.find('form').find('div').first().html(`为第 ${title_no} 题添加图片`)
+        p.find('form').find('div').first().html(`为第 ${title_no} 题添加题干图片`)
         activeModalCard('.uploadPictureOfTitle-content')
     })
 
-    function get_idNo() {
-        let _id, title_no
-        try {
-            title_no = +($('#title_no').text().trim().replace(/\.$/, ''))
-            _id = $(`.table-content ul li:nth-child(${title_no})`).attr('id').replace('No', '')
-        } catch (err) {
-            console.log(`get_idNo err: ${err}`)
-        }
-        return [_id, title_no]
-    }
-
     $('.uploadPictureOfTitle-content form').on('submit', function (e) {
         e.preventDefault()
-        let [_id, title_no] = get_idNo()
+        rh.uploadPictureOfTitle.call(this)
+    })
 
-        const formData = new FormData(this)
-        formData.append('_id', _id)
-        
-        $.ajax({
-            type: 'POST',
-            contentType: false,
-            url: '/uploadPictureOfTitle',
-            data: formData,
-            processData: false,
-            success: function (res) {
-                toggleResponseTip('上传成功, 即将刷新页面', 3000)
-                idleModalCard()
-                setTimeout(() => {
-                    window.location.href = `/TQ/${_id}/${title_no}`
-                }, 4000);
-            },
-            error: function (xhr, status, err) {
-                const formatRes = JSON.parse(xhr.responseText)
-                toggleResponseTip(`上传失败: ${formatRes.errMsg}`, 4000)
-            }
-        })
+    $('#uploadPictureOfExplan').on('click', function () {
+        const title_no = $('#title_no').text().trim().replace(/\.$/, '')
+        const p = $('.uploadPictureOfExplan-content')
+        p.find('form').find('div').first().html(`为第 ${title_no} 题添加解释图片`)
+        activeModalCard('.uploadPictureOfExplan-content')
+    })
+
+    $('.uploadPictureOfExplan-content form').on('submit', function (e) {
+        e.preventDefault()
+        rh.uploadPictureOfExplan.call(this)
     })
 
     $('#selectSubject').on('click', function () {
-        const switchSubject = $('.switchSubject-content')
-        $.ajax({
-            type: "GET",
-            url: '/subjectForm',
-            success: (res) => {
-                switchSubject.html(res.html.switchSubjectContent)
-                activeModalCard('.switchSubject-content')
-            }
-        })
+        rh.fetchSubjectForm.call(this)
     })
 
     $(document).on('change', '#selectForSubject', function () {
-        const selectedValue = $(this).val().trim()
-        const chapterSelect = $('#selectForChapter')
-
-        chapterSelect.empty().append('<option value="">- 请选择 -</option>');
-
-        $.ajax({
-            type: "GET",
-            url: '/chapterNames' + '?subjectName=' + selectedValue,
-            success: (res) => {
-                res.data.chapterNames.forEach(chapterName => {
-                    chapterSelect.append(`<option value="${chapterName}">${chapterName}</option>`)
-                })
-            }
-        })
+        rh.fetchChapterNames.call(this)
     })
 
     $(document).on('change', '#selectForChapter', function () {
-        const selectedValue = $(this).val().trim()
-        const sectionSelect = $('#selectForSection')
-
-        sectionSelect.empty().append('<option value="">- 请选择 -</option>');
-
-        $.ajax({
-            type: "GET",
-            url: '/sectionNames' + '?chapterName=' + selectedValue,
-            success: (res) => {
-                res.data.sectionNames.forEach(sectionName => {
-                    sectionSelect.append(`<option value="${sectionName}">${sectionName}</option>`)
-                })
-            }
-        })
+        rh.fetchSectionNames.call(this)
     })
 
     $(document).on('submit', '#switchSubjectForm', function (e) {
         e.preventDefault()
-
-        const subject = $('#selectForSubject').val()
-        const chapter = $('#selectForChapter').val()
-        const section = $('#selectForSection').val()
-
-        let [_id, title_no] = get_idNo()
-
-        $.ajax({
-            type: 'POST',
-            contentType: 'application/json',
-            url: '/modifyUserSubject',
-            data: JSON.stringify({
-                subject, chapter, section
-            }),
-            success: (result) => {
-                if (result.success == 1) {
-                    window.location.href = `/TQ`
-                } else {
-                    $('.switchSubject-content').html('')
-                    console.log('here')
-                    idleModalCard()
-                }
-            }
-        })
+        rh.modifyUserSubject.call(this)
     })
-
-    // $(document).on('change', '#toggleSwitch', function(){
-    //     const instantJudge = this.checked
-    //     $.ajax({
-    //         type: 'POST',
-    //         contentType: 'application/json',
-    //         url: '/userSetting/modify/instantJudge',
-    //         data: JSON.stringify({
-    //             instantJudge: instantJudge
-    //         }),
-    //         success: () => {
-    //             console.log('here success')
-    //         }
-    //     })
-    // })
 
     $(document).on('click', '#modifyUserSettingButton', function () {
         if (!confirm('设置变更将自动刷新页面，是否继续?')) {
             return
         }
-        const instantJudge = $('#toggleSwitch').prop('checked')
-
-        let [_id, title_no] = get_idNo()
-
-        $.ajax({
-            type: 'POST',
-            contentType: 'application/json',
-            url: '/modifyUserSetting/',
-            data: JSON.stringify({
-                instantJudge: instantJudge
-            }),
-            success: () => {
-                window.location.href = `/TQ/${_id}/${title_no}`
-            }
-        })
+        rh.modifyUserSetting.call(this)
     })
 
     $('#setting').on('click', function () {

@@ -129,17 +129,17 @@ body {
   cursor: pointer;
 }
 
-.titleImg-content{
+.titleImg-content, .explanImg-content{
   margin-top: 20px;
   height: 220px;
 }
 
-.titleImg-content:not(:has(img)) {
+.titleImg-content:not(:has(img)), .explanImg-content:not(:has(img)) {
   height: 0;
   margin-top: 0;
 }
 
-.titleImg-content img{
+.titleImg-content img, .explanImg-content img{
   display: block;
   max-width: 100%;
   margin: 0 auto;
@@ -265,4 +265,20 @@ body {
   pointer-events: auto;
   opacity: 1;
   transform: translateY(0);
+}
+
+.uploadPictureOfTitle-content ,.uploadPictureOfExplan-content{
+    width: 300px;
+    height: 100px;
+    top: calc(40vh - 50px);
+    left: calc(50vw - 150px);
+}
+
+.uploadPictureOfTitle-content form input,.uploadPictureOfExplan-content form input{
+    display: block;
+    margin-top: 20px;
+}
+
+.uploadPictureOfTitle-content form input:nth-child(1),.uploadPictureOfExplan-content form input:nth-child(1){
+    width: 100%;
 }

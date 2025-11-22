@@ -47,7 +47,7 @@ async function getTitle(req, res) {
         if (titleDto.userAnswer) {
             const userSetting = await userSettingService.getUserSetting(req.session.user.userEmail)
             if (userSetting.instantJudge) {
-                formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { explanation: titleDto.explanation })
+                formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { titleDto, explanation: titleDto.explanation })
             }
         }
     } catch (err) {
@@ -81,6 +81,31 @@ async function uploadPictureOfTitle(req, res) {
     const newFilePath = path.join(process.env.imgStoreFolder, newFilename)
     await fs.rename(req.file.path, newFilePath)
     titleService.modifyImgOfTitle(collectionName, req.body._id, newFilename)
+    res.json(formatRes) 
+}
+
+async function uploadPictureOfExplan(req, res) {
+    var formatRes = createFormatRes()
+    try {
+        await fs.access(req.file.path)
+    } catch (err) {
+        res.status(400)
+        formatRes.errMsg = 'uploadPictureOfExplan: req.file.path is empty'
+        res.json(formatRes)
+        return
+    }
+    const subjectName = req.session.user.currentSubject
+    const chapterName = req.session.user.currentChapter
+    const sectionName = req.session.user.currentSection
+    const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
+    const titleDto = await titleService.getTitleById(collectionName, req.body._id)
+    const hashInput = titleDto.title + JSON.stringify(titleDto.options)
+    const ext = path.extname(req.file.filename)
+    const hash = md5(hashInput, 12)
+    const newFilename = `explan${hash}${ext}`
+    const newFilePath = path.join(process.env.imgStoreFolder, newFilename)
+    await fs.rename(req.file.path, newFilePath)
+    titleService.modifyImgOfExplan(collectionName, req.body._id, newFilename)
     res.json(formatRes) 
 }
 
@@ -143,5 +168,6 @@ module.exports = {
     getChapterNames,
     getSectionNames,
     submitSubjectForm,
-    uploadPictureOfTitle
+    uploadPictureOfTitle,
+    uploadPictureOfExplan
 }
