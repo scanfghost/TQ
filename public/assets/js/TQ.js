@@ -85,4 +85,18 @@ $(document).ready(() => {
     $('#setting').on('click', function () {
         activeModalCard('.setting-content')
     })
+
+    $('#addFavoriteTitle').on('click', function () {
+        const title_no = $('#title_no').text().trim().replace(/\.$/, '')
+        const p = $('.addFavoriteTitle-content')
+        p.find('form').find('div').first().html(`收藏第 ${title_no} 题`)
+        $('#inputKeywords').val('')
+        $('#inputComment').val('')
+        activeModalCard('.addFavoriteTitle-content')
+    })
+
+    $('.addFavoriteTitle-content form').on('submit', function (e) {
+        e.preventDefault()
+        rh.addFavoriteTitle.call(this)
+    })
 })

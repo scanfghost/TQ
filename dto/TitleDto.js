@@ -1,19 +1,4 @@
 /**
- * Title Data Transfer Object
- * 用于题目数据的传输和格式转换
- */
-
-/**
- * 选择题选项结构
- */
-class ChoiceOption {
-    constructor(text, isCorrect = false) {
-        this.text = text;
-        this.isCorrect = isCorrect;
-    }
-}
-
-/**
  * 题目基础数据结构
  */
 class TitleDto {
@@ -141,89 +126,7 @@ class TitleDto {
     }
 }
 
-/**
- * 题目创建/更新DTO
- */
-class TitleCreateDto {
-    constructor(data) {
-        this.type = data.type;
-        this.validateBasicData(data);
-        
-        if (this.type === 'choice') {
-            this.validateChoiceData(data.choice);
-            this.choice = this.buildChoiceData(data.choice);
-        }
-    }
-
-    /**
-     * 验证基础数据
-     */
-    validateBasicData(data) {
-        const validTypes = ['choice', 'fill', 'answer'];
-        if (!validTypes.includes(data.type)) {
-            throw new Error('Invalid title type. Must be one of: choice, fill, answer');
-        }
-    }
-
-    /**
-     * 验证选择题数据
-     */
-    validateChoiceData(choiceData) {
-        if (!choiceData) {
-            throw new Error('Choice data is required for choice type');
-        }
-
-        const validOptionTypes = ['shared', 'individual'];
-        if (!validOptionTypes.includes(choiceData.optionType)) {
-            throw new Error('Invalid option type. Must be shared or individual');
-        }
-
-        if (choiceData.optionType === 'shared' && (!choiceData.shared || !Array.isArray(choiceData.shared))) {
-            throw new Error('Shared options are required for optionType=shared');
-        }
-
-        if (choiceData.optionType === 'individual' && (!choiceData.individual || !Array.isArray(choiceData.individual))) {
-            throw new Error('Individual options are required for optionType=individual');
-        }
-
-        if (!choiceData.rightOption || !Array.isArray(choiceData.rightOption)) {
-            throw new Error('Right option is required');
-        }
-    }
-
-    /**
-     * 构建选择题数据
-     */
-    buildChoiceData(choiceData) {
-        return {
-            title: choiceData.title || '',
-            optionType: choiceData.optionType,
-            shared: choiceData.optionType === 'shared' ? choiceData.shared : undefined,
-            individual: choiceData.optionType === 'individual' ? choiceData.individual : undefined,
-            rightOption: choiceData.rightOption,
-            explanation: choiceData.explanation || '',
-            img: choiceData.img || ''
-        };
-    }
-
-    /**
-     * 转换为数据库存储格式
-     */
-    toDatabaseFormat() {
-        const dbData = {
-            type: this.type
-        };
-
-        if (this.type === 'choice' && this.choice) {
-            dbData.choice = this.choice;
-        }
-
-        return dbData;
-    }
-}
 
 module.exports = {
-    TitleDto,
-    TitleCreateDto,
-    ChoiceOption
+    TitleDto
 };

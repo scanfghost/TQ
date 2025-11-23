@@ -294,7 +294,7 @@ function modifyUserSubject() {
 
     rs.modifyUserSubject(subject, chapter, section) 
         .done((res) => {
-            if (res.success == 1) {
+            if (res.data.success == 1) {
                 window.location.href = `/TQ`
             } else {
                 $('.switchSubject-content').html('')
@@ -339,6 +339,22 @@ function updateTitleInUrl(newid, newNo) {
     history.replaceState({ questionNum: newNo }, '', newPath)
 }
 
+function addFavoriteTitle() {
+    const [titleid, _] = get_idNo()
+    const comment = $('#inputComment').val().trim()
+    const keywords = $('#inputKeywords').val().trim().split(/[,，]/).map(keyword => keyword.trim())
+
+    rs.addFavoriteTitle(titleid, comment, keywords)
+        .done((res) => {
+            toggleResponseTip('加入收藏成功', 3000)
+            idleModalCard()
+        })
+        .fail((xhr, status, err) => {
+            const formatRes = JSON.parse(xhr.responseText)
+            toggleResponseTip(formatRes.errMsg, 4000)
+        })
+}
+
 export default {
     singleChoice,
     fetchTitle,
@@ -353,5 +369,6 @@ export default {
     fetchSectionNames,
     modifyUserSubject,
     modifyUserSetting,
-    updateTitleInUrl
+    updateTitleInUrl,
+    addFavoriteTitle,
 }

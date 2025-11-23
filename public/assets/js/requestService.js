@@ -91,6 +91,17 @@ function fetchSectionNames(chapterName) {
     })
 }
 
+function addFavoriteTitle(titleid, comment, keywords) {
+    return $.ajax({
+        type: "POST",
+        contentType: 'application/json',
+        url: '/addFavoriteTitle',
+        data: JSON.stringify({
+            titleid, comment, keywords
+        }),
+    })
+}
+
 export default {
     fetchTitle,
     submitChoice,
@@ -103,4 +114,5 @@ export default {
     fetchSubjectForm,
     fetchChapterNames,
     fetchSectionNames,
+    addFavoriteTitle,
 }

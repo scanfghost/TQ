@@ -31,6 +31,8 @@ router.post('/uploadPictureOfTitle', imgUpload.single('picture'), titleControlle
 
 router.post('/uploadPictureOfExplan', imgUpload.single('picture'), titleController.uploadPictureOfExplan)
 
+router.post('/addFavoriteTitle', titleController.addFavoriteTitle)
+
 router.delete('/restartAnswer', controller.removeUserAnswer)
 
 module.exports = router

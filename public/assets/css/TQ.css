@@ -8,7 +8,7 @@
 
 /* individual-group 样式 */
 .individual-group:nth-child(n+2) {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 
 body {
@@ -70,14 +70,14 @@ body {
   padding: 5px;
 }
 
-.blank{
+.blank {
   margin: 0 auto;
   width: 95%;
   height: 36px;
   margin-top: 30px;
 }
 
-.blank >  div{
+.blank>div {
   width: 100%;
   height: 100%;
   border-left: 3px solid var(--note-fence-color);
@@ -93,7 +93,7 @@ body {
   line-height: 2;
 }
 
-.choice{
+.choice {
   margin-top: 15px;
 }
 
@@ -129,17 +129,20 @@ body {
   cursor: pointer;
 }
 
-.titleImg-content, .explanImg-content{
+.titleImg-content,
+.explanImg-content {
   margin-top: 20px;
   height: 220px;
 }
 
-.titleImg-content:not(:has(img)), .explanImg-content:not(:has(img)) {
+.titleImg-content:not(:has(img)),
+.explanImg-content:not(:has(img)) {
   height: 0;
   margin-top: 0;
 }
 
-.titleImg-content img, .explanImg-content img{
+.titleImg-content img,
+.explanImg-content img {
   display: block;
   max-width: 100%;
   margin: 0 auto;
@@ -267,18 +270,66 @@ body {
   transform: translateY(0);
 }
 
-.uploadPictureOfTitle-content ,.uploadPictureOfExplan-content{
-    width: 300px;
-    height: 100px;
-    top: calc(40vh - 50px);
-    left: calc(50vw - 150px);
+.uploadPictureOfTitle-content,
+.uploadPictureOfExplan-content {
+  width: 300px;
+  height: 100px;
+  top: calc(40vh - 50px);
+  left: calc(50vw - 150px);
 }
 
-.uploadPictureOfTitle-content form input,.uploadPictureOfExplan-content form input{
-    display: block;
-    margin-top: 20px;
+.uploadPictureOfTitle-content form input,
+.uploadPictureOfExplan-content form input {
+  display: block;
+  margin-top: 20px;
 }
 
-.uploadPictureOfTitle-content form input:nth-child(1),.uploadPictureOfExplan-content form input:nth-child(1){
-    width: 100%;
+.uploadPictureOfTitle-content form input:nth-child(1),
+.uploadPictureOfExplan-content form input:nth-child(1) {
+  width: 100%;
+}
+
+.addFavoriteTitle-content {
+  width: 360px;
+  height: 280px;
+  top: calc(40vh - 140px);
+  left: calc(50vw - 180px);
+}
+
+.addFavoriteTitle-content form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.addFavoriteTitle-content form input {
+  width: 80%;
+  display: block;
+  margin-top: 20px;
+}
+
+#inputKeywords{
+  height: 30px;
+}
+
+.addFavoriteTitle-content textarea {
+  margin-top: 20px;
+  width: 80%;
+  height: 90px;
+}
+
+.addFavoriteTitle-content form small {
+  margin-top: 10px;
+}
+
+.addFavoriteTitle-content form input[type="submit"] {
+  background-color: var(--button-background-color);
+  border: 0;
+  height: 30px;
+}
+
+.addFavoriteTitle-content form input[type="submit"]:hover {
+  cursor: pointer;
+  background-color: var(--button-hover-background-color);
 }

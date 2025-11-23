@@ -143,7 +143,7 @@ async function submitChoice(req, res) {
     try {
         if (userSetting.instantJudge) {
             const explanation = titleDto.explanation
-            formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { explanation })
+            formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { titleDto, explanation })
             if (isChoiceCorrect) {
                 formatRes.data.answer = "right"
             } else {
@@ -154,12 +154,30 @@ async function submitChoice(req, res) {
         }
     } catch (err) {
         res.status(400)
-        formatRes.errMsg = 'getTitle: ' + err
+        formatRes.errMsg = 'submitChoice: ' + err
         res.json(formatRes)
         return
     }
     res.json(formatRes)
 }
+
+async function addFavoriteTitle(req, res) {
+    var formatRes = createFormatRes()
+    try {
+        const result = await titleService.addFavoriteTitle(req.session.user, req.body.titleid, req.body.comment, req.body.keywords)
+        if(!result){
+            throw new Error(`添加收藏失败`)
+        }
+    } catch (err) {
+        res.status(400)
+        formatRes.errMsg = 'addFavoriteTitle: ' + err
+        res.json(formatRes)
+        return
+    }
+    res.json(formatRes)
+}
+
+
 
 module.exports = {
     submitChoice,
@@ -169,5 +187,6 @@ module.exports = {
     getSectionNames,
     submitSubjectForm,
     uploadPictureOfTitle,
-    uploadPictureOfExplan
+    uploadPictureOfExplan,
+    addFavoriteTitle
 }
