@@ -327,9 +327,45 @@ body {
   background-color: var(--button-background-color);
   border: 0;
   height: 30px;
+  transition: background-color 0.3s;
 }
 
 .addFavoriteTitle-content form input[type="submit"]:hover {
+  cursor: pointer;
+  background-color: var(--button-hover-background-color);
+}
+
+.editTitle-content {
+  width: 520px;
+  height: 400px;
+  top: calc(40vh - 200px);
+  left: calc(50vw - 260px);
+}
+
+.editTitle-content form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.editTitle-content form textarea {
+  width: 90%;
+  height: 120px;
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+.editTitle-content form input[type="submit"] {
+  background-color: var(--button-background-color);
+  border: 0;
+  height: 30px;
+  transition: background-color 0.3s;
+  margin-top: 30px;
+  padding: 0 20px;
+}
+
+.editTitle-content form input[type="submit"]:hover {
   cursor: pointer;
   background-color: var(--button-hover-background-color);
 }

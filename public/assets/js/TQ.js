@@ -99,4 +99,15 @@ $(document).ready(() => {
         e.preventDefault()
         rh.addFavoriteTitle.call(this)
     })
+
+    $('#editTitle').on('click', function () {
+        rh.editTitle.call(this)
+    })
+
+    $('.editTitle-content form').on('submit', function (e) {
+        e.preventDefault()
+        rh.submitTitle.call(this)
+        idleModalCard()
+    })
+
 })

@@ -261,6 +261,29 @@ async function addFavoriteTitle(user, titleid, comment, keywords) {
     }
 }
 
+async function editTitle(collectionName, _id, titleType, title, explanation) {
+    try {
+        const titleDao = getTitleModel(collectionName)
+        // 使用点符号语法只更新特定字段，而不是整个嵌套对象
+        const updateFields = {}
+        if (title !== undefined) {
+            updateFields[`${titleType}.title`] = title
+        }
+        if (explanation !== undefined) {
+            updateFields[`${titleType}.explanation`] = explanation
+        }
+        
+        const result = await titleDao.findOneAndUpdate(
+            { _id },
+            { $set: updateFields }
+        ).lean()
+        
+        return result
+    } catch (err) {
+        throw new Error(`editTitle: ${err}`)
+    }
+}
+
 module.exports = {
     getSizeOfAllTitle,
     getTitleById,
@@ -274,5 +297,6 @@ module.exports = {
     saveHistoryAnswer,
     modifyImgOfTitle,
     modifyImgOfExplan,
-    addFavoriteTitle
+    addFavoriteTitle,
+    editTitle
 }

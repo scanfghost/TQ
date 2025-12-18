@@ -68,8 +68,11 @@
             </div>
             <div class="action actions-item" id="selectSubject">选择科目与章节</div>
             <div class="action actions-item" id="saveAnswer">提交作答版本</div>
+            <% if(user && user.role=='admin') { %>
             <div class="action actions-item" id="uploadPictureOfTitle">添加题干图片</div>
             <div class="action actions-item" id="uploadPictureOfExplan">添加解释图片</div>
+            <div class="action actions-item" id="editTitle">编辑题目</div>
+            <% } %>
             <div class="action actions-item" id="addFavoriteTitle">加入收藏</div>
             <div class="action actions-item" id="restartAnswer">重新做题</div>
             <div class="action actions-item" id="setting">偏好设置</div>
@@ -102,10 +105,19 @@
             <form>
                 <div></div>
                 <input type="text" name="keywords" id="inputKeywords" placeholder="添加收藏关键词(多个关键词请用逗号分隔)" required>
-                <textarea name="comment" id="inputComment" placeholder="添加收藏备注"></textarea>
+                <textarea name="comment" id="inputComment" placeholder="添加收藏备注(可选)"></textarea>
                     <small>提示：关键词和备注用于搜索收藏的题目</small>
                 <input type="submit" value="加入收藏">
             </form>
+    </div>
+
+    <div class="editTitle-content modalCard">
+        <form>
+            <div></div>
+            <textarea name="title" id="inputTitle"></textarea>
+            <textarea name="explanation" id="inputExplanation"></textarea>
+            <input type="submit" value="保存编辑">
+        </form>
     </div>
 
     <div class="shadow-cover"></div>

@@ -20,7 +20,7 @@ function singleChoice() {
     const selected = this.id.replace('choice', '')
     let userOption = [[selected]]
 
-    rs.submitChoice(_id, userOption)    
+    rs.submitChoice(_id, userOption)
         .done(res => {
             $('.explanation-content').html(res.html.explanationContent)
             const answer = res.data.answer
@@ -124,7 +124,7 @@ function multipleSingleChoice() {
 
     // 如果所有组都已选择，才提交答案
     if (allGroupsSelected) {
-        rs.submitChoice(_id, userOption)    
+        rs.submitChoice(_id, userOption)
             .done(res => {
                 $('.explanation-content').html(res.html.explanationContent)
                 const answer = res.data.answer
@@ -292,7 +292,7 @@ function modifyUserSubject() {
 
     let [_id, title_no] = get_idNo()
 
-    rs.modifyUserSubject(subject, chapter, section) 
+    rs.modifyUserSubject(subject, chapter, section)
         .done((res) => {
             if (res.data.success == 1) {
                 window.location.href = `/TQ`
@@ -313,7 +313,7 @@ function modifyUserSetting() {
 
     let [_id, title_no] = get_idNo()
 
-    rs.modifyUserSetting(instantJudge)  
+    rs.modifyUserSetting(instantJudge)
         .done(() => {
             window.location.href = `/TQ/${_id}/${title_no}`
         })
@@ -355,6 +355,39 @@ function addFavoriteTitle() {
         })
 }
 
+function editTitle() {
+    const title_no = $('#title_no').text().trim().replace(/\.$/, '')
+    const p = $('.editTitle-content')
+    p.find('form').find('div').first().html(`编辑第 ${title_no} 题`)
+    const [_id, _] = get_idNo()
+    const titleInput = $('#inputTitle')
+    const explanInput = $('#inputExplanation')
+    rs.fetchTitleDto(_id)
+        .done((res) => {
+            titleInput.val(res.data.titleDto.title)
+            explanInput.val(res.data.titleDto.explanation)
+            activeModalCard('.editTitle-content')
+        })
+}
+
+function submitTitle() {
+    const [_id, _] = get_idNo()
+    const title = $('#inputTitle').val().trim()
+    const explanation = $('#inputExplanation').val().trim()
+    rs.editTitle(_id, title, explanation)
+        .done((res) => {
+            toggleResponseTip('编辑成功, 3秒后刷新页面', 3000)
+            idleModalCard()
+            setTimeout(() => {
+                location.reload()
+            }, 3500)
+        })
+        .fail((xhr, status, err) => {
+            const formatRes = JSON.parse(xhr.responseText)
+            toggleResponseTip(formatRes.errMsg, 4000)
+        })
+}
+
 export default {
     singleChoice,
     fetchTitle,
@@ -371,4 +404,6 @@ export default {
     modifyUserSetting,
     updateTitleInUrl,
     addFavoriteTitle,
+    editTitle,
+    submitTitle,
 }

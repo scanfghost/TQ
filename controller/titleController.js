@@ -29,9 +29,9 @@ async function getTQPage(req, res) {
         if (titleDto.userAnswer && titleDto.type == "choice") {
             titleDto.isChoiceCorrect = titleService.isChoiceCorrect(titleDto.userAnswer.userOption, titleDto.rightOption)
         }
-        res.render('TQ', { titleDtoList, titleDto, No, userSetting, explanation, subjectName, chapterName, sectionName })
+        res.render('TQ', { titleDtoList, titleDto, No, userSetting, explanation, subjectName, chapterName, sectionName, user: req.session.user })
     } else {
-        res.render('TQ', { titleDtoList, titleDto, No, userSetting, subjectName, chapterName, sectionName })
+        res.render('TQ', { titleDtoList, titleDto, No, userSetting, subjectName, chapterName, sectionName, user: req.session.user })
     }
 }
 
@@ -56,6 +56,17 @@ async function getTitle(req, res) {
         res.json(formatRes)
         return
     }
+    res.json(formatRes)
+}
+
+async function getTitleDto(req, res) {
+    var formatRes = createFormatRes()
+    const subjectName = req.session.user.currentSubject
+    const chapterName = req.session.user.currentChapter
+    const sectionName = req.session.user.currentSection
+    const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
+    const titleDto = await titleService.getTitleById(collectionName, req.params._id)
+    formatRes.data.titleDto = titleDto
     res.json(formatRes)
 }
 
@@ -177,6 +188,26 @@ async function addFavoriteTitle(req, res) {
     res.json(formatRes)
 }
 
+async function editTitle(req, res) {
+    var formatRes = createFormatRes()
+    const subjectName = req.session.user.currentSubject
+    const chapterName = req.session.user.currentChapter
+    const sectionName = req.session.user.currentSection
+    const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
+    try {
+        const result = await titleService.editTitle(collectionName, req.body._id, "choice", req.body.title, req.body.explanation)
+        if(!result){
+            throw new Error(`编辑题目失败`)
+        }
+    } catch (err) {
+        res.status(400)
+        formatRes.errMsg = 'editTitle: ' + err
+        res.json(formatRes)
+        return
+    }
+    res.json(formatRes)
+}
+
 
 
 module.exports = {
@@ -188,5 +219,7 @@ module.exports = {
     submitSubjectForm,
     uploadPictureOfTitle,
     uploadPictureOfExplan,
-    addFavoriteTitle
+    addFavoriteTitle,
+    getTitleDto,
+    editTitle,
 }

@@ -102,6 +102,28 @@ function addFavoriteTitle(titleid, comment, keywords) {
     })
 }
 
+function fetchTitleDto(_id) {
+    return $.ajax({
+        type: "GET",
+        url: '/titleDto/' + _id,
+    })
+}
+
+
+
+function editTitle(_id, title, explanation) {
+    return $.ajax({
+        type: "POST",
+        contentType: 'application/json',
+        url: '/editTitle',
+        data: JSON.stringify({
+            _id, title, explanation
+        }),
+    })
+}
+
+
+
 export default {
     fetchTitle,
     submitChoice,
@@ -115,4 +137,6 @@ export default {
     fetchChapterNames,
     fetchSectionNames,
     addFavoriteTitle,
+    fetchTitleDto,
+    editTitle,
 }
