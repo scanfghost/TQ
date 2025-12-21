@@ -8,8 +8,8 @@ upload/
 
 public/assets/img/
 
-.bat
+*.bat
 
-.exe
+*.exe
 
-.pdf
+*.pdf

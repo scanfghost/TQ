@@ -1,28 +1,51 @@
 const service = require('../service/service')
 const titleService = require('../service/titleService')
 const userService = require('../service/userService')
-const {createFormatRes} = require('../common/formatRes') 
+const { createFormatRes } = require('../common/formatRes')
 
 function getIndexPage(req, res) {
     res.render('index', { session: req.session })
 }
 
 async function loginUser(req, res) {
-    var formatRes = createFormatRes()
-    const { user, code } = await userService.validateUser(req.body.userEmail, req.body.userPasswd)
-    if (user) {
-        req.session.user = user
-        formatRes.data.loginSuccess = true
-        formatRes.data.url = '/TQ'
-    } else {
-        if (code == -1) {
-            formatRes.errMsg = `用户${req.body.userEmail}不存在`
-        } else if(code == 2){
-            formatRes.errMsg = '密码错误'
+    let formatRes = createFormatRes()
+    try {
+        const { user, code } = await userService.validateUser(req.body.userEmail, req.body.userPasswd)
+        if (user) {
+            req.session.user = user
+            formatRes.data.loginSuccess = true
+            //test
+            formatRes.data.userEmail = user.userEmail
+            formatRes.data.avatar = "/avatar.png"
+        } else {
+            if (code == -1) {
+                formatRes.errMsg = `用户${req.body.userEmail}不存在`
+            } else if (code == 2) {
+                formatRes.errMsg = '密码错误'
+            }
+            formatRes.data.loginSuccess = false
         }
+    } catch (err) {
         formatRes.data.loginSuccess = false
+        formatRes.errMsg = '服务器出错'
     }
     res.json(formatRes)
+}
+
+function logoutUser(req, res) {
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                console.log('登出异常:', err)
+                throw err
+            } else {
+                console.log('Session 销毁成功')
+            }
+        })
+    } catch (err) {
+        console.log('登出异常:', err?.message)
+        res.end()
+    }
 }
 
 async function removeUserAnswer(req, res) {
@@ -35,7 +58,7 @@ async function removeUserAnswer(req, res) {
 }
 
 async function modifyUserSubject(req, res) {
-    var formatRes = createFormatRes()
+    let formatRes = createFormatRes()
     try {
         const subject = req.body.subject
         const chapter = req.body.chapter
@@ -51,7 +74,7 @@ async function modifyUserSubject(req, res) {
 }
 
 async function saveHistoryAnswer(req, res) {
-    var formatRes = createFormatRes()
+    let formatRes = createFormatRes()
     try {
         const subjectName = req.session.user.currentSubject
         const chapterName = req.session.user.currentChapter
@@ -73,12 +96,25 @@ async function saveHistoryAnswer(req, res) {
     }
 }
 
+function authCheck(req, res) { 
+    let formatRes = createFormatRes()
+    if (req.session.user) {
+        formatRes.data.logined = true
+        formatRes.data.user = req.session.user
+    } else {
+        formatRes.data.logined = false
+    }
+    res.json(formatRes)
+ }
 
+ 
 
 module.exports = {
     getIndexPage,
     removeUserAnswer,
     modifyUserSubject,
     loginUser,
-    saveHistoryAnswer
+    saveHistoryAnswer,
+    authCheck,
+    logoutUser
 }

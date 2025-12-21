@@ -1,6 +1,6 @@
 const { createFormatRes } = require('../common/formatRes')
 
-const publicPaths = ['/', '/login']
+const publicPaths = ['/', '/login', "/authCheck"]
 const adminPrefixes = ['/upload', '/admin']
 
 function auth(req, res, next) {

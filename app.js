@@ -1,5 +1,6 @@
 require('dotenv').config({ silent: true })
 var express = require('express')
+const cors = require('cors')
 var mongoose = require('mongoose')
 var router = require('./route/route')
 var session = require('express-session')
@@ -36,6 +37,19 @@ const sessionStore = MongoStore.create({
 var app = express()
 
 app.set('view engine', 'ejs')
+
+// 精确的本机 CORS 配置
+const corsOptions = {
+  origin: [
+    'http://localhost:5173'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Total-Count'],
+  credentials: true,              
+}
+
+app.use(cors(corsOptions))
 
 app.use(express.static('./public'))
 

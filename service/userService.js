@@ -41,7 +41,7 @@ async function validateUser(userEmail, userPasswd) {
     const result = await this.getUser(userEmail)
     if (result) {
         if (result.userPasswd == userPasswd) {
-            return { user: result }
+            return { user: result ,code: 0}
         } else {
             return { user: null, code: 2 }
         }

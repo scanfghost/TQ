@@ -37,22 +37,19 @@ async function getTQPage(req, res) {
 
 async function getTitle(req, res) {
     var formatRes = createFormatRes()
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
+    const subjectName = req.body.subject
+    const chapterName = req.body.chapter
+    const sectionName = req.body.section
     const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
-    const titleDto = await titleService.getTitleById(collectionName, req.params._id)
+    const titleDto = await titleService.getTitleById(collectionName, req.body.id)
     try {
-        formatRes.html.titleChoiceContent = await ejs.renderFile(templateDir + '/partials/titleChoiceContent.ejs', { titleDto, No: req.query.No })
+        formatRes.data.question = titleDto
         if (titleDto.userAnswer) {
             const userSetting = await userSettingService.getUserSetting(req.session.user.userEmail)
-            if (userSetting.instantJudge) {
-                formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { titleDto, explanation: titleDto.explanation })
-            }
         }
     } catch (err) {
         res.status(403)
-        formatRes.errMsg = 'getTitle: ' + err
+        formatRes.errMsg = 'getTitle ' + err
         res.json(formatRes)
         return
     }
