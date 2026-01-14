@@ -1,0 +1,232 @@
+/* 主标题区域 */
+.main-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.main-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 300;
+}
+
+.main-header p {
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+/* 窗口样式 */
+.iframe-window {
+    position: absolute;
+    background: white;
+    border-radius: 12px;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    overflow: hidden;
+    min-width: 400px;
+    min-height: 300px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.iframe-window.active {
+    box-shadow:
+        0 25px 80px rgba(78, 110, 242, 0.4),
+        0 0 0 2px rgba(78, 110, 242, 0.3);
+}
+
+.iframe-window.maximized {
+    border-radius: 0;
+    transition: all 0.2s ease;
+}
+
+/* 窗口头部 */
+.window-header {
+    height: 48px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+
+    user-select: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.window-header {
+    cursor: grab;
+    /* 兼容 Safari */
+    cursor: -webkit-grab;
+}
+
+.window-header:active {
+    cursor: grabbing;
+    cursor: -webkit-grabbing;
+}
+
+.window-title {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.window-title::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+}
+
+.window-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.window-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 300;
+    transition: all 0.2s ease;
+}
+
+.window-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.minimize-btn:hover {
+    background: rgba(255, 193, 7, 0.3);
+}
+
+.maximize-btn:hover {
+    background: rgba(76, 175, 80, 0.3);
+}
+
+.close-btn {
+    background: rgba(244, 67, 54, 0.2);
+}
+
+.close-btn:hover {
+    background: rgba(244, 67, 54, 0.4);
+    transform: scale(1.1);
+}
+
+/* 内容区域 */
+.window-content {
+    height: calc(100% - 48px);
+    width: 100%;
+    background: #f8f9fa;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}
+
+/* 缩放手柄 */
+.resize-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    right: 2px;
+    bottom: 2px;
+    cursor: se-resize;
+    opacity: 0;
+    transition: opacity 0.2s;
+    background: linear-gradient(135deg, transparent 50%, #667eea 50%);
+    border-radius: 2px;
+}
+
+.iframe-window:hover .resize-handle {
+    opacity: 0.6;
+}
+
+.resize-handle:hover {
+    opacity: 1 !important;
+}
+
+/* 窗口列表 */
+.window-list {
+    margin-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 15px;
+}
+
+.window-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.window-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.window-item.active {
+    background: rgba(102, 126, 234, 0.2);
+    font-weight: 500;
+}
+
+.window-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.small-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.1);
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* 状态提示 */
+.status-bar {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.status-bar.show {
+    opacity: 1;
+}
