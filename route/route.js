@@ -21,7 +21,7 @@ router.get('/sectionNames', titleController.getSectionNames)
 
 router.post('/fetchUserPreference', userSettingController.fetchUserSetting)
 
-router.post('/modifyUserSubject', controller.modifyUserSubject)
+router.post('/modifyUserSubject', controller.modifyUserStudyPath)
 
 router.post('/login', controller.loginUser)
 

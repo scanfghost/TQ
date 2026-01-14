@@ -24,7 +24,7 @@ $(document).ready(() => {
                     toggleResponseTip("登录成功，3秒后跳转...", 2000)
                     idleModalCard('.login-content')
                     setTimeout(() => {
-                        window.location.href = res.data.url
+                        window.location.href = '/TQ'
                     }, 3000);
                 } else {
                     toggleResponseTip("登录失败: " + res.errMsg, 4000)
