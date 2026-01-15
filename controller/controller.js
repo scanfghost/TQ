@@ -3,7 +3,6 @@ const titleService = require('../service/titleService')
 const userService = require('../service/userService')
 const { createFormatRes } = require('../common/formatRes')
 const m2UserService = require('../service/m2/userService')
-const { UserDto } = require('../dto/UserDto')
 function getIndexPage(req, res) {
     res.render('index', { session: req.session })
 }
@@ -13,11 +12,10 @@ async function loginUser(req, res) {
     try {
         const { user, code } = await m2UserService.validateUser(req.body.userEmail, req.body.userPasswd)
         if (user) {
-            const userDto = new UserDto(user.id, user.email, user.currentSubject, user.currentChapter, user.currentSection, user.role)
-            req.session.user = userDto
+            req.session.user = user
             formatRes.data.loginSuccess = true
             //test
-            formatRes.data.userEmail = userDto.email
+            formatRes.data.userEmail = user.userEmail
             formatRes.data.avatar = "/avatar.png"
         } else {
             if (code == -1) {

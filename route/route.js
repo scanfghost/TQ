@@ -29,7 +29,7 @@ router.post('/logout', controller.logoutUser)
 
 router.post('/choice', titleController.submitChoice)
 
-router.post('/updateUserPreference', userSettingController.modifyUserSetting)
+router.post('/modifyUserSetting', userSettingController.modifyUserSetting)
 
 router.post('/saveHistoryAnswer', controller.saveHistoryAnswer)
 

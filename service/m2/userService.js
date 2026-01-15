@@ -1,4 +1,5 @@
 const pool = require('../../config/mysql2/connectionPool')
+const { UserDto } = require('../../dto/UserDto')
 
 async function getUser(userEmail) {
     try {
@@ -12,16 +13,20 @@ async function getUser(userEmail) {
 
 async function validateUser(userEmail, userPasswd) {
     //code -1 means user is not existed, code n means nth param dismatch
-    const result = await this.getUser(userEmail)
-    if (result) {
-        const user = result[0]
-        if (user.password == userPasswd) {
-            return { user: user, code: 0 }
+    try {
+        const result = await this.getUser(userEmail)
+        if (result) {
+            if (result[0].password == userPasswd) {
+                const user = new UserDto(result[0].id, result[0].email, result[0].currentSubject, result[0].currentChapter, result[0].currentSection, result[0].role)
+                return { user: user, code: 0 }
+            } else {
+                return { user: null, code: 2 }
+            }
         } else {
-            return { user: null, code: 2 }
+            return { user: null, code: -1 }
         }
-    } else {
-        return { user: null, code: -1 }
+    } catch (err) {
+        throw new Error(`validateUser: ${err}`)
     }
 }
 
