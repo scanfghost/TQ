@@ -25,21 +25,21 @@
                 <%- include('./partials/titleChoiceContent.ejs') -%>
             </div>
             <div class="explanation-content">
-                <% if(userSetting.instantJudge && titleDto.userAnswer) {%>
+                <% if (userSetting.instantJudge && questionDto[questionDto.type].useranswer) {%>
                     <%- include('./partials/explanationContent.ejs') -%>
                 <% } %>
             </div>
         </div>
         <div class="table-content">
             <ul>
-                <% for(var i=1; i <=titleDtoList.length; i++){ %>
+                <% for(var i=1; i <=pageList.length; i++){ %>
                     <% 
-                        const oneTitle=titleDtoList[i - 1]; 
+                        const item=pageList[i - 1]; 
                         let className='' ; 
-                        if (oneTitle.userAnswer) { 
+                        if (item.userOption) { 
                             className+='answered' ; 
                             if (userSetting && userSetting.instantJudge) { 
-                                if(oneTitle.userAnswer.isChoiceCorrect) { 
+                                if(item.isCorrect) { 
                                     className +=' right' ; 
                                 } else {
                                     className +=' wrong' ; 
@@ -47,7 +47,7 @@
                             } 
                         } 
                     %>
-                        <li id="No<%= titleDtoList[i-1]._id %>" class="<%= className %>">
+                        <li id="serial<%= pageList[i-1].id %>" class="<%= className %>">
                             <%= i %>
                         </li>
                         <% } %>
@@ -59,13 +59,13 @@
         <div class="float-btn">＋</div>
         <div class="actions">
             <div class="actions-item" id="subjectName">
-                <%= subjectName %>
+                <%= user.currentSubject %>
             </div>
             <div class="actions-item" id="chapterName">
-                <%= chapterName %>
+                <%= user.currentChapter %>
             </div>
             <div class="actions-item" id="sectionName" style="border-bottom: 1px solid rgb(146, 144, 144);">
-                <%= sectionName %>
+                <%= user.currentSection %>
             </div>
             <div class="actions-item" id="AIConsultant" style="border-bottom: 1px solid rgb(146, 144, 144); cursor: pointer;">
                 <span style="display: inline-block;

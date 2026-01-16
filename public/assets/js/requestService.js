@@ -1,7 +1,7 @@
-function fetchTitle(_id, No) {
+function fetchTitle(_id) {
     return $.ajax({
         type: 'GET',
-        url: '/title/' + _id + "?No=" + encodeURIComponent(No)
+        url: '/title/' + _id
     })
 }
 

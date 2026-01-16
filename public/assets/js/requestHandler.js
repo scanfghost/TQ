@@ -4,9 +4,8 @@ import rs from './requestService.js'
 
 function singleChoice() {
     // 单空单选
-
-    const _id = $('.title')[0].id
-    const relavantLi = $(`#No${_id}`)
+    const _id = $('.title')[0].id.replace(/^question/, '')
+    const relavantLi = $(`#serial${_id}`)
 
     if (relavantLi.hasClass('right') || relavantLi.hasClass('wrong')) {
         return
@@ -148,22 +147,20 @@ function multipleSingleChoice() {
 }
 
 function fetchTitle() {
-    let _id = this.id.replace('No', '')
-    const No = $(this).text().trim()
+    let _id = this.id.replace(/^serial/, '')
 
-    rs.fetchTitle(_id, No)
+    rs.fetchTitle(_id)
         .done(res => {
             $('.explanation-content').html('')
             if (res.html.explanationContent) {
                 $('.explanation-content').html(res.html.explanationContent)
             }
             $('.title-content').html(res.html.titleChoiceContent)
-            let [newid, newtitle_no] = get_idNo()
-            updateTitleInUrl(newid, newtitle_no)
+            updateTitleInUrl(_id)
         })
         .fail((xhr, status, err) => {
             const errorData = JSON.parse(xhr.responseText)
-            toggleResponseTip(`服务端错误信息: errorData.errMsg`)
+            toggleResponseTip(`服务端错误信息: ${errorData.errMsg}`)
             console.log('服务端错误信息:', errorData.errMsg)
         })
 }
@@ -311,11 +308,11 @@ function modifyUserSubject() {
 function modifyUserSetting() {
     const instantJudge = $('#toggleSwitch').prop('checked')
 
-    let [_id, title_no] = get_idNo()
+    let [_id, _] = get_idNo()
 
     rs.modifyUserSetting(instantJudge)
         .done(() => {
-            window.location.href = `/TQ/${_id}/${title_no}`
+            window.location.href = `/TQ/${_id}`
         })
         .fail((xhr, status, err) => {
             const formatRes = JSON.parse(xhr.responseText)
@@ -334,9 +331,9 @@ function get_idNo() {
     return [_id, title_no]
 }
 
-function updateTitleInUrl(newid, newNo) {
-    const newPath = `/TQ/${newid}/${newNo}`
-    history.replaceState({ questionNum: newNo }, '', newPath)
+function updateTitleInUrl(newid) {
+    const newPath = `/TQ/${newid}`
+    history.replaceState({}, '', newPath)
 }
 
 function addFavoriteTitle() {

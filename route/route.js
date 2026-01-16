@@ -7,11 +7,11 @@ const {imgUpload} = require('../middleware/upload')
 
 router.get('/authCheck',controller.authCheck)
 
-router.get('/TQ{/:_id/:No}', titleController.getTQPage)
+router.get('/TQ{/:id}', titleController.getTQPage)
 
 router.get('/', controller.getIndexPage)
 
-router.post('/title', titleController.getTitle)
+router.get('/title{/:id}', titleController.getQuestion)
 
 router.get('/subjectForm', titleController.submitSubjectForm)
 
@@ -39,7 +39,7 @@ router.post('/uploadPictureOfExplan', imgUpload.single('picture'), titleControll
  
 router.post('/addFavoriteTitle', titleController.addFavoriteTitle)
 
-router.get('/titleDto/:_id', titleController.getTitleDto)
+router.get('/titleDto/:_id', titleController.getQuestionDto)
 
 router.post('/editTitle', titleController.editTitle)
 

@@ -1,17 +1,17 @@
-<div class="title" id="<%= titleDto._id %>" data-blank-type="<%= titleDto.blankType %>">
+<div class="title" id="question<%= questionDto.id %>" data-blank-type="<%= questionDto['choice'].blankType %>">
     <span id="title_no">
-        <%= No %>.
+        <%= questionDto.serial %>.
     </span>
-    <%- titleDto.title.replace(/(\\n|\n)/g, '<br>') %>
+    <%- questionDto.title.replace(/(\\n|\n)/g, '<br>') %>
 </div>
 
-<div class="choice"  data-type="<%= titleDto.optionType %>">
+<div class="choice"  data-type="<%= questionDto['choice'].optionType %>">
   <% 
       var vertical = false 
-      if(titleDto.optionType == "shared") { 
-          titleDto.options.forEach(option => { if(option.replace(/\s+/g, '').length > 6) { vertical=true} })
-      }else if(titleDto.optionType == "individual") {
-          outerLoop: for (const options of titleDto.options) {
+      if(questionDto["choice"].optionType == "shared") { 
+          questionDto['choice'].shared.forEach(option => { if(option.replace(/\s+/g, '').length > 6) { vertical=true} })
+      }else if(questionDto['choice'].optionType == "individual") {
+          outerLoop: for (const options of questionDto['choice'].individual) {
               for (const option of options) {
                 if (option.replace(/\s+/g, '').length > 6) {
                   vertical = true;
@@ -21,10 +21,10 @@
           }
       } 
   %>
-  <% if (titleDto.optionType == "shared") { %>
+  <% if (questionDto['choice'].optionType == "shared") { %>
       <% 
-        const shared = titleDto.options || []
-        const userOption = titleDto.userAnswer?.userOption?.[0] || []
+        const shared = questionDto['choice'].shared || []
+        const userOption = questionDto['choice'].useranswer?.userOption?.[0] || []
         const count = Math.min(shared.length, 8)
         const letters = ['A','B','C','D','E','F','G','H']
       %>
@@ -37,10 +37,10 @@
       </ul>
   <% } %>
 
-  <% if (titleDto.optionType == "individual") { %>
+  <% if (questionDto['choice'].optionType == "individual") { %>
       <% 
         const letters = ['A','B','C','D','E','F','G','H']
-        const individual = titleDto.options || []
+        const individual = questionDto['choice'].individual || []
       %>
     
       <% individual.forEach((options, groupIndex) => { %>
@@ -48,7 +48,7 @@
           <ul class="<%= vertical ? 'vertical' : '' %>">
             <% 
               const groupOptions = options.slice(0, 8);
-              const groupUserOption = titleDto.userAnswer?.userOption?.[groupIndex] || []
+              const groupUserOption = questionDto['choice'].useranswer?.userOption?.[groupIndex] || []
             %>
             <% groupOptions.forEach((text, optionIndex) => { %>
               <%
@@ -68,17 +68,8 @@
   <% } %>
 </div>
 
-<!-- <div class="blank">
-  <% 
-    const blankSize = titleDto.blankSize || 1
-    for(let iblank = 1; iblank <= blankSize; iblank++){ 
-  %>
-      <div></div>
-  <% }   %>
-</div> -->
-
 <div class="titleImg-content">
-  <% if (titleDto.img) { %>
-      <img src="/assets/img/<%= titleDto.img %>" alt="">
+  <% if (questionDto.titleImgs) { %>
+      <img src="/assets/img/<%= questionDto.titleImgs[0] %>" alt="">
     <% } %>    
 </div>

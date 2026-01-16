@@ -7,34 +7,6 @@ const {TitleDto} = require('../dto/TitleDto')
 const favoriteTitleDao = require('../dao/FavoriteTitleDao')
 const {FavoriteTitleDto} = require('../dto/FavoriteTitleDto')
 
-async function getSizeOfAllTitle(collectionName) {
-    try {
-        const titleDao = getTitleModel(collectionName)
-        return await titleDao.countDocuments()
-    } catch (err) {
-        throw new Error(`getSizeOfAllTitle: ${err}`)
-    }
-}
-
-async function getTitleById(collectionName, _id) {
-    try {
-        const titleDao = getTitleModel(collectionName)
-        const [titleDoc, userAnswerDoc] = await Promise.all([
-            titleDao.findById(_id).lean(),
-            userAnswerDao.findOne({ ftitleid: _id }).lean()
-        ])
-
-        if (!titleDoc) {
-            throw new Error(`题目不存在`)
-        }
-
-        titleDoc.userAnswer = userAnswerDoc
-        return new TitleDto(titleDoc)
-    } catch (err) {
-        throw new Error(`getTitleById: ${err}`)
-    }
-}
-
 /**
  * 检查选择题答案是否正确
  * @param {Array<Array<Number>>} pending - 待检查的用户答案
@@ -57,100 +29,6 @@ function isChoiceCorrect(pending, correct){
         }
     }
     return true
-}
-
-async function getSubjectNames() {
-    try {
-        const result = await subjectDao.find({}).select('subject').lean()
-        return result.map(doc => doc.subject)
-    } catch (err) {
-        throw new Error(`getSubjectNames: ${err}`)
-    }
-}
-
-async function getChapterNames(subjectName) {
-    try {
-        const result = await subjectDao.findOne({ subject: subjectName }).lean()
-        return Object.keys(result.chapters)
-    } catch (err) {
-        throw new Error(`getChapterNames: ${err}`)
-    }
-}
-
-async function getSectionNames(chapterName) {
-    try {
-        const result = await chapterDao.findOne({ chapter: chapterName })
-        return Array.from(result.sections.keys())
-    } catch (err) {
-        throw new Error(`getSectionNames: ${err}`)
-    }
-}
-
-async function getSectionRef(subjectName, chapterName, sectionName) {
-    const subject = await subjectDao.findOne({ subject: subjectName }).lean()
-    const chapter = await chapterDao.findOne({ _id: subject.chapters[chapterName] }).lean()
-    return chapter.sections[sectionName]
-}
-
-async function getExplanationById(collectionName, _id) {
-    // try {
-    //     const titleDao = getTitleModel(collectionName)
-    //     const result = await titleDao.findById(_id).select('explanation').lean()
-    //     return result.explanation
-    // } catch (err) {
-    //     throw new Error(`getExplanationById: ${err}`)
-    // }
-}
-
-async function getUserAnswerOfAllChoiceTitle(collectionName, userEmail) {
-    try {
-        const titleDao = getTitleModel(collectionName)
-        var result = await titleDao.aggregate([
-            {
-                $lookup: {
-                    from: userAnswerDao.collection.collectionName,
-                    let: { titleId: "$_id" },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ["$fcollection", collectionName] },
-                                        { $eq: ["$ftitleid", "$$titleId"] },
-                                        { $eq: ["$fuseremail", userEmail] }
-                                    ]
-                                }
-                            }
-                        }
-                    ],
-                    as: "userAnswer"
-                }
-            },
-            {
-                $project: {
-                    _id: 1,
-                    choice: {
-                        $cond: {
-                            if: {$eq: ["$type", "choice"]},
-                            then: {
-                                rightOption: "$choice.rightOption",
-                                optionType: "$choice.optionType"
-                            },
-                            else: "$$REMOVE"
-                        }
-                    },
-                    userAnswer: { $arrayElemAt: ["$userAnswer", 0] }
-                }
-            }
-        ])
-        if (result.length == 0) {
-            console.log(`getUserAnswerOfAllChoiceTitle: cannot find by collection of ${collectionName}`)
-        }
-
-        return result.map(doc => new TitleDto(doc))
-    } catch (err) {
-        throw new Error(`getUserAnswerOfAllChoiceTitle: ${err}`)
-    }
 }
 
 async function saveHistoryAnswer(userEmail, collectionName) {
@@ -285,15 +163,7 @@ async function editTitle(collectionName, _id, titleType, title, explanation) {
 }
 
 module.exports = {
-    getSizeOfAllTitle,
-    getTitleById,
     isChoiceCorrect,
-    getSubjectNames,
-    getChapterNames,
-    getSectionNames,
-    getSectionRef,
-    getExplanationById,
-    getUserAnswerOfAllChoiceTitle,
     saveHistoryAnswer,
     modifyImgOfTitle,
     modifyImgOfExplan,

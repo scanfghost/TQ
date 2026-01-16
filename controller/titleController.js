@@ -6,64 +6,48 @@ const titleService = require('../service/titleService')
 const userService = require('../service/userService')
 const userSettingService = require('../service/userSettingService')
 const { md5 } = require('../common/md5')
+const m2QuestionService = require('../service/m2/questionService')
+const m2UserSettingService = require('../service/m2/userSettingService')
+const { createBasicUserAnswer } = require('../dto/QuestionDto')
 
 const templateDir = path.join(__dirname, '../views')
 
 async function getTQPage(req, res) {
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
-    const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
-    const titleDtoList = await titleService.getUserAnswerOfAllChoiceTitle(collectionName, req.session.user.userEmail)
-    const userSetting = await userSettingService.getUserSetting(req.session.user.userEmail)
-    let titleDto, No
-    if (req.params._id) {
-        titleDto = await titleService.getTitleById(collectionName, req.params._id)
-        No = req.params.No
+    const resultList = await m2QuestionService.getIdSerialUserAnswerByStudyPath(req.session.user)
+    const userSetting = await m2UserSettingService.getUserSetting(req.session.user.id)
+    let questionDto, rawIdSerial
+    if (req.params.id) {
+        rawIdSerial = resultList.find(item => item.id == req.params.id)
+        questionDto = await m2QuestionService.getQuestionById(req.params.id)
+        questionDto.insertChoiceUserAnswer(createBasicUserAnswer(rawIdSerial.userOption,rawIdSerial.isCorrect))
     } else {
-        titleDto = await titleService.getTitleById(collectionName, titleDtoList[0]._id)
-        No = 1
+        rawIdSerial = resultList.find(item => item.serial == 1)
+        questionDto = await m2QuestionService.getQuestionById(rawIdSerial.id)
+        questionDto.insertChoiceUserAnswer(createBasicUserAnswer(rawIdSerial.userOption,rawIdSerial.isCorrect))
     }
-    if (userSetting.instantJudge) {
-        const explanation = titleDto.explanation
-        if (titleDto.userAnswer && titleDto.type == "choice") {
-            titleDto.isChoiceCorrect = titleService.isChoiceCorrect(titleDto.userAnswer.userOption, titleDto.rightOption)
-        }
-        res.render('TQ', { titleDtoList, titleDto, No, userSetting, explanation, subjectName, chapterName, sectionName, user: req.session.user })
-    } else {
-        res.render('TQ', { titleDtoList, titleDto, No, userSetting, subjectName, chapterName, sectionName, user: req.session.user })
-    }
+    res.render('TQ', { questionDto, pageList: resultList, userSetting, user: req.session.user })
 }
 
-async function getTitle(req, res) {
+async function getQuestion(req, res) {
     var formatRes = createFormatRes()
-    const subjectName = req.body.subject
-    const chapterName = req.body.chapter
-    const sectionName = req.body.section
-    const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
-    const titleDto = await titleService.getTitleById(collectionName, req.body.id)
     try {
-        formatRes.data.question = titleDto
-        if (titleDto.userAnswer) {
-            const userSetting = await userSettingService.getUserSetting(req.session.user.userEmail)
-        }
+        const question = await m2QuestionService.getQuestionUserAnswerById(req.params.id, req.session.user)
+        formatRes.html.titleChoiceContent = await ejs.renderFile(templateDir + '/partials/titleChoiceContent.ejs', { questionDto: question })
+        formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { questionDto: question })
     } catch (err) {
+        console.log(`getQuestion: ${err}`)
         res.status(403)
-        formatRes.errMsg = 'getTitle ' + err
+        formatRes.errMsg = 'getQuestion ' + err
         res.json(formatRes)
         return
     }
     res.json(formatRes)
 }
 
-async function getTitleDto(req, res) {
+async function getQuestionDto(req, res) {
     var formatRes = createFormatRes()
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
-    const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
-    const titleDto = await titleService.getTitleById(collectionName, req.params._id)
-    formatRes.data.titleDto = titleDto
+    const question = await m2QuestionService.getQuestionById(req.params.id)
+    formatRes.data.titleDto = question
     res.json(formatRes)
 }
 
@@ -210,13 +194,13 @@ async function editTitle(req, res) {
 module.exports = {
     submitChoice,
     getTQPage,
-    getTitle,
+    getQuestion,
     getChapterNames,
     getSectionNames,
     submitSubjectForm,
     uploadPictureOfTitle,
     uploadPictureOfExplan,
     addFavoriteTitle,
-    getTitleDto,
+    getQuestionDto,
     editTitle,
 }
