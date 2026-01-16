@@ -1,35 +1,8 @@
 const {getTitleModel} = require('../dao/TitleDao')
 const userAnswerDao = require('../dao/UserAnswerDao')
 const historyAnswerDao = require('../dao/HistoryAnswerDao')
-const subjectDao = require('../dao/SubjectDao')
-const chapterDao = require('../dao/ChapterDao')
-const {TitleDto} = require('../dto/TitleDto')
 const favoriteTitleDao = require('../dao/FavoriteTitleDao')
 const {FavoriteTitleDto} = require('../dto/FavoriteTitleDto')
-
-/**
- * 检查选择题答案是否正确
- * @param {Array<Array<Number>>} pending - 待检查的用户答案
- * @param {Array<Array<Number>>} correct - 正确答案
- * @returns {Boolean} - 是否正确
- */
-function isChoiceCorrect(pending, correct){
-    if (!Array.isArray(pending) || pending.length != correct.length) {
-        return false
-    }
-    
-    for (let i = 0; i < correct.length; i++) {
-        if (pending[i].length != correct[i].length) {
-            return false
-        }
-        for (let j = 0; j < correct[i].length; j++) {
-            if (pending[i][j] != correct[i][j]) {
-                return false
-            }
-        }
-    }
-    return true
-}
 
 async function saveHistoryAnswer(userEmail, collectionName) {
     try {
@@ -163,7 +136,6 @@ async function editTitle(collectionName, _id, titleType, title, explanation) {
 }
 
 module.exports = {
-    isChoiceCorrect,
     saveHistoryAnswer,
     modifyImgOfTitle,
     modifyImgOfExplan,

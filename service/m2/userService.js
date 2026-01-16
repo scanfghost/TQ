@@ -3,8 +3,8 @@ const { UserDto } = require('../../dto/UserDto')
 
 async function getUser(userEmail) {
     try {
-        const sql = 
-        `select 
+        const sql =
+            `select 
             user.*, 
             subject.name as currentSubject, 
             chapter.name as currentChapter, 
@@ -47,7 +47,7 @@ async function saveUserChoice(userId, questionId, userOption, isChoiceCorrect) {
             [
                 userId,
                 questionId,
-                userOption,
+                JSON.stringify(userOption),
                 isChoiceCorrect ? 1 : 0
             ]
         )
@@ -58,22 +58,76 @@ async function saveUserChoice(userId, questionId, userOption, isChoiceCorrect) {
 }
 
 async function modifyUserStudyPath(userId, newSubject, newChapter, newSection) {
-    const sql = 'update user set currentSubject = ?, currentChapter = ?, currentSection = ? where id = ?'
+    const [subjectId, chapterId, sectionId] = await getStudyPathIdByName(newSubject, newChapter, newSection)
+    const sql = `
+    update user 
+    set 
+        subject_id = ?, 
+        chapter_id = ?, 
+        section_id = ? 
+    where id = ?`
     try {
         const [result] = await pool.query(sql,
             [
-                newSubject,
-                newChapter,
-                newSection,
+                subjectId,
+                chapterId,
+                sectionId,
                 userId
             ]
         )
         if (result.affectedRows == 0) {
             throw new Error(`modifyUserStudyPath: User with ID ${userId} not found`)
         }
+        console.log(result.affectedRows)
         return result.affectedRows == 1 ? true : false
     } catch (err) {
         throw new Error(`modifyUserStudyPath: ${err}`)
+    }
+}
+
+async function getStudyPathIdByName(subjectName, chapterName, sectionName) {
+    let sql =
+        `select id from subject where name = ?`
+
+    try {
+        let result
+        result = await pool.query(sql,
+            [
+                subjectName
+            ]
+        )
+        if (result[0].length == 0) {
+            throw new Error(`not found subjectId by ${subjectName}`)
+        }
+        const subjectId = result[0][0].id
+        sql =
+            `select id from chapter where subject_id = ? and name = ?`
+        result = await pool.query(sql,
+            [
+                subjectId,
+                chapterName
+            ]
+        )
+        if (result[0].length == 0) {
+            throw new Error(`not found chapterId by ${chapterName}`)
+        }
+        const chapterId = result[0][0].id
+        sql =
+            `select id from section where chapter_id = ? and name = ?`
+            result = await pool.query(sql,
+                [
+                    chapterId,
+                    sectionName
+                ]
+            )
+        if (result[0].length == 0) {
+            throw new Error(`not found sectionId by ${sectionName}`)
+        }
+        const sectionId = result[0][0].id
+        return [subjectId, chapterId, sectionId]
+    } catch (err) {
+        console.dir(err)
+        throw new Error(`getStudyPathIdByName: ${err}`)
     }
 }
 

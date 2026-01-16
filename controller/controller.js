@@ -64,9 +64,7 @@ async function modifyUserStudyPath(req, res) {
         const subject = req.body.subject
         const chapter = req.body.chapter
         const section = req.body.section
-        
         const success = await m2UserService.modifyUserStudyPath(req.session.user.id, subject, chapter, section)
-        await userService.modifyUserSubject(req.session.user.userEmail, subject, chapter, section)
         if (success) {
             req.session.user.currentSubject = subject
             req.session.user.currentChapter = chapter

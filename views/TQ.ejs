@@ -25,7 +25,7 @@
                 <%- include('./partials/titleChoiceContent.ejs') -%>
             </div>
             <div class="explanation-content">
-                <% if (userSetting.instantJudge && questionDto[questionDto.type].useranswer) {%>
+                <% if (userSetting.instantJudge && questionDto[questionDto.type].useranswer.userOption) {%>
                     <%- include('./partials/explanationContent.ejs') -%>
                 <% } %>
             </div>

@@ -87,14 +87,14 @@ async function getQuestionUserAnswerById(questionId, user) {
         useranswer.choice_options as userOption, 
         useranswer.choice_correct as isCorrect
     from question
-    left join useranswer on question.id = useranswer.question_id
-    where question.id = ? and useranswer.user_id = ?`
+    left join useranswer on question.id = useranswer.question_id and useranswer.user_id = ?
+    where question.id = ?`
 
     try {
         const [result] = await pool.query(sql,
             [
-                questionId,
-                user.id
+                user.id,
+                questionId
             ]
         )
 
@@ -126,9 +126,52 @@ async function getQuestionUserAnswerById(questionId, user) {
     }
 }
 
+function judgeChoice(userOption, rightOption) {
+    if (!Array.isArray(userOption) || userOption.length != rightOption.length) {
+        return false
+    }
+    
+    for (let i = 0; i < rightOption.length; i++) {
+        if (userOption[i].length != rightOption[i].length) {
+            return false
+        }
+        for (let j = 0; j < rightOption[i].length; j++) {
+            if (userOption[i][j] != rightOption[i][j]) {
+                return false
+            }
+        }
+    }
+    return true
+}
+
+async function editChoiceQuestion(questionId, newTitle, newExplantion) {
+    const sql = 
+    `update question
+    set
+        title = ?,
+        explantion = ?
+    where id = ?`
+    try {
+        const [result] = await pool.query(sql,
+            [
+                newTitle,
+                newExplantion,
+                questionId
+            ]
+        )
+        if (result.affectedRows == 0) {
+            throw new Error(`not found by id_${questionId}`)
+        }
+    } catch (err) {
+        throw new Error(`editChoiceQuestion: ${err}`)
+    }
+}
+
 module.exports = {
     getQuestionCount,
     getQuestionById,
     getIdSerialUserAnswerByStudyPath,
-    getQuestionUserAnswerById
+    getQuestionUserAnswerById,
+    judgeChoice,
+    editChoiceQuestion
 }

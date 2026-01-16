@@ -324,7 +324,7 @@ function get_idNo() {
     let _id, title_no
     try {
         title_no = +($('#title_no').text().trim().replace(/\.$/, ''))
-        _id = $(`.table-content ul li:nth-child(${title_no})`).attr('id').replace('No', '')
+        _id = $(`.table-content ul li:nth-child(${title_no})`).attr('id').replace('serial', '')
     } catch (err) {
         console.log(`get_idNo err: ${err}`)
     }
@@ -361,8 +361,8 @@ function editTitle() {
     const explanInput = $('#inputExplanation')
     rs.fetchTitleDto(_id)
         .done((res) => {
-            titleInput.val(res.data.titleDto.title)
-            explanInput.val(res.data.titleDto.explanation)
+            titleInput.val(res.data.questionDto.title)
+            explanInput.val(res.data.questionDto.explantion)
             activeModalCard('.editTitle-content')
         })
 }

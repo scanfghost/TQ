@@ -13,7 +13,7 @@ router.get('/', controller.getIndexPage)
 
 router.get('/title{/:id}', titleController.getQuestion)
 
-router.get('/subjectForm', titleController.submitSubjectForm)
+router.get('/subjectForm', titleController.getSubjectNames)
 
 router.get('/chapterNames', titleController.getChapterNames)
 
@@ -39,9 +39,9 @@ router.post('/uploadPictureOfExplan', imgUpload.single('picture'), titleControll
  
 router.post('/addFavoriteTitle', titleController.addFavoriteTitle)
 
-router.get('/titleDto/:_id', titleController.getQuestionDto)
+router.get('/titleDto/:id', titleController.getQuestionDto)
 
-router.post('/editTitle', titleController.editTitle)
+router.post('/editTitle', titleController.editChoiceQuestion)
 
 router.delete('/restartAnswer', controller.removeUserAnswer)
 
