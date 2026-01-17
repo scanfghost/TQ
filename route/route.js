@@ -19,7 +19,7 @@ router.get('/chapterNames', titleController.getChapterNames)
 
 router.get('/sectionNames', titleController.getSectionNames)
 
-router.post('/fetchUserPreference', userSettingController.fetchUserSetting)
+// router.post('/fetchUserPreference', userSettingController.fetchUserSetting)
 
 router.post('/modifyUserSubject', controller.modifyUserStudyPath)
 
@@ -43,6 +43,6 @@ router.get('/titleDto/:id', titleController.getQuestionDto)
 
 router.post('/editTitle', titleController.editChoiceQuestion)
 
-router.delete('/restartAnswer', controller.removeUserAnswer)
+// router.delete('/restartAnswer', controller.removeUserAnswer)
 
 module.exports = router

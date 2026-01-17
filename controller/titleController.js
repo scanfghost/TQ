@@ -157,13 +157,10 @@ async function submitChoice(req, res) {
 async function addFavoriteTitle(req, res) {
     let formatRes = createFormatRes()
     try {
-        const result = await titleService.addFavoriteTitle(req.session.user, req.body.titleid, req.body.comment, req.body.keywords)
-        if (!result) {
-            throw new Error(`添加收藏失败`)
-        }
+        await m2QuestionService.addFavoriteQuestion(req.session.user.id, req.body.titleid, req.body.keywords, req.body.comment)
     } catch (err) {
         res.status(400)
-        formatRes.errMsg = 'addFavoriteTitle: ' + err
+        formatRes.errMsg = err.message
         res.json(formatRes)
         return
     }

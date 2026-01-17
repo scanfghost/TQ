@@ -292,6 +292,49 @@ async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectio
     }
 }
 
+async function addFavoriteQuestion(userId, questionId, keywords, comment) {
+    if(!Array.isArray(keywords)){
+        throw new Error(`keywords must be an array`)
+    }
+    if (typeof comment === 'string' && comment.length > 300) {
+        throw new Error('评论内容不能超过 300 个字符')
+    }
+    try {
+        let sql = 
+        `select count(*) as count from favoritequestion where user_id = ? and question_id = ?`
+
+        const [existedCount] = await pool.query(sql,
+            [
+                userId,
+                questionId
+            ]
+        )
+
+        if (existedCount[0].count > 0) {
+            throw new Error(`the question is already favorited`)
+        }
+
+        sql = 
+        `insert into favoritequestion (user_id, question_id, keywords, comment) values(?, ?, ?, ?)`
+
+        const [result] = await pool.query(sql,
+            [
+                userId,
+                questionId,
+                JSON.stringify(keywords),
+                comment
+            ]
+        )
+
+        if (result.affectedRows == 0) {
+            throw new Error(`add favorite question failed by database`)
+        }
+    } catch (err) {
+        console.log(`addFavoriteTitle: ${err}`)
+        throw new Error(`${err}`)
+    }
+}
+
 module.exports = {
     getQuestionCountByStudyPath,
     getQuestionById,
@@ -299,5 +342,6 @@ module.exports = {
     getQuestionUserAnswerById,
     equalChoice,
     editChoiceQuestion,
-    saveHistoryAnswerByStudyPath
+    saveHistoryAnswerByStudyPath,
+    addFavoriteQuestion
 }

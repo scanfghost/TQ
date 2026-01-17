@@ -1,5 +1,3 @@
-const service = require('../service/service')
-const titleService = require('../service/titleService')
 const { createFormatRes } = require('../common/formatRes')
 const m2UserService = require('../service/m2/userService')
 function getIndexPage(req, res) {
@@ -48,15 +46,6 @@ function logoutUser(req, res) {
     }
 }
 
-async function removeUserAnswer(req, res) {
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
-    const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
-    await service.deleteDoc('useranswer', { fcollection: collectionName, fuseremail: req.session.user.userEmail })
-    res.json({ success: true })
-}
-
 async function modifyUserStudyPath(req, res) {
     let formatRes = createFormatRes()
     try {
@@ -95,7 +84,6 @@ function authCheck(req, res) {
 
 module.exports = {
     getIndexPage,
-    removeUserAnswer,
     modifyUserStudyPath,
     loginUser,
     authCheck,
