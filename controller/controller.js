@@ -1,6 +1,5 @@
 const service = require('../service/service')
 const titleService = require('../service/titleService')
-const userService = require('../service/userService')
 const { createFormatRes } = require('../common/formatRes')
 const m2UserService = require('../service/m2/userService')
 function getIndexPage(req, res) {
@@ -81,29 +80,6 @@ async function modifyUserStudyPath(req, res) {
     }
 }
 
-async function saveHistoryAnswer(req, res) {
-    let formatRes = createFormatRes()
-    try {
-        const subjectName = req.session.user.currentSubject
-        const chapterName = req.session.user.currentChapter
-        const sectionName = req.session.user.currentSection
-        const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
-        const [code, message] = await titleService.saveHistoryAnswer(req.session.user.userEmail, collectionName)
-
-        if (code != 1) {
-            formatRes.errMsg = message
-            res.status(403).json(formatRes)
-            return
-        }
-        formatRes.data.message = message
-        formatRes.data.success = true
-        res.json(formatRes)
-    } catch (err) {
-        formatRes.errMsg = '保存历史答案失败: ' + err.message
-        res.status(400).json(formatRes)
-    }
-}
-
 function authCheck(req, res) { 
     let formatRes = createFormatRes()
     if (req.session.user) {
@@ -122,7 +98,6 @@ module.exports = {
     removeUserAnswer,
     modifyUserStudyPath,
     loginUser,
-    saveHistoryAnswer,
     authCheck,
     logoutUser
 }

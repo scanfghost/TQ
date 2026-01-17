@@ -1,13 +1,14 @@
 const pool = require('../../config/mysql2/connectionPool')
 const { QuestionDto, createBasicChoice, createBasicUserAnswer } = require('../../dto/QuestionDto')
-async function getQuestionCount(subject, chapter, section) {
+
+async function getQuestionCountByStudyPath(subjectId, chapterId, sectionId) {
     const sql = 'select count(*) as count from question where subject_id = ? and chapter_id = ? and section_id = ?'
     try {
-        const [rows] = await pool.query(sql, 
+        const [rows] = await pool.query(sql,
             [
-                subject,
-                chapter,
-                section
+                subjectId,
+                chapterId,
+                sectionId
             ]
         )
 
@@ -17,10 +18,37 @@ async function getQuestionCount(subject, chapter, section) {
     }
 }
 
+async function getUserAnswerCountByStudyPath(userId, subjectId, chapterId, sectionId) {
+    const sql =
+        `select 
+        count(*) as count 
+    from useranswer 
+    inner join question on  question.id = useranswer.question_id
+    where question.subject_id = ? and question.chapter_id = ? and question.section_id = ? and useranswer.user_id = ?`
+    try {
+        const [result] = await pool.query(sql,
+            [
+                subjectId,
+                chapterId,
+                sectionId,
+                userId
+            ]
+        )
+
+        if (result.length == 0) {
+            throw new Error(`not found by ${subjectId}-${chapterId}-${sectionId}-userId_${userId}`)
+        }
+
+        return result[0].count
+    } catch (err) {
+        throw new Error(`getUserAnswerCountByStudyPath: ${err}`)
+    }
+}
+
 async function getQuestionById(questionId) {
     const sql = 'select * from question where id = ?'
     try {
-        const [result] = await pool.query(sql, 
+        const [result] = await pool.query(sql,
             [
                 questionId
             ]
@@ -52,8 +80,8 @@ async function getQuestionById(questionId) {
 }
 
 async function getIdSerialUserAnswerByStudyPath(user) {
-    const sql = 
-    `select 
+    const sql =
+        `select 
         question.id, 
         question.serial,
         useranswer.choice_options as userOption,
@@ -81,8 +109,8 @@ async function getIdSerialUserAnswerByStudyPath(user) {
 }
 
 async function getQuestionUserAnswerById(questionId, user) {
-    const sql = 
-    `select
+    const sql =
+        `select
         question.*, 
         useranswer.choice_options as userOption, 
         useranswer.choice_correct as isCorrect
@@ -126,11 +154,11 @@ async function getQuestionUserAnswerById(questionId, user) {
     }
 }
 
-function judgeChoice(userOption, rightOption) {
+function equalChoice(userOption, rightOption) {
     if (!Array.isArray(userOption) || userOption.length != rightOption.length) {
         return false
     }
-    
+
     for (let i = 0; i < rightOption.length; i++) {
         if (userOption[i].length != rightOption[i].length) {
             return false
@@ -145,8 +173,8 @@ function judgeChoice(userOption, rightOption) {
 }
 
 async function editChoiceQuestion(questionId, newTitle, newExplantion) {
-    const sql = 
-    `update question
+    const sql =
+        `update question
     set
         title = ?,
         explantion = ?
@@ -167,11 +195,109 @@ async function editChoiceQuestion(questionId, newTitle, newExplantion) {
     }
 }
 
+async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectionId) {
+    let connection
+    try {
+        const finishedCount = await getUserAnswerCountByStudyPath(userId, subjectId, chapterId, sectionId)
+        const questionCount = await getQuestionCountByStudyPath(subjectId, chapterId, sectionId)
+
+        if (finishedCount < questionCount) {
+            throw new Error('还有题目未完成')
+        }
+        
+        connection = await pool.getConnection()
+        
+        await connection.beginTransaction()
+
+        let entireSame = true
+
+        let sql = 
+        `select id from question where subject_id = ? and chapter_id = ? and section_id = ?`
+
+        const [questionIds] = await pool.query(sql, 
+            [
+                subjectId,
+                chapterId,
+                sectionId
+            ]
+        )
+
+        for(let item of questionIds){
+            const qid = item.id
+            sql = 
+            `select choice_options, choice_correct from useranswer where user_id = ? and question_id = ?`
+            const [useranswers] = await pool.query(sql,
+                [
+                    userId,
+                    qid
+                ]
+            )
+
+            if (useranswers.length == 0) {
+                continue
+            }
+
+            const {choice_options, choice_correct} = useranswers[0]
+
+            sql = 
+            `select * from historyanswer where user_id = ? and question_id = ?`
+
+            const [historyanswers] = await pool.query(sql,
+                [
+                    userId,
+                    qid
+                ]
+            )
+
+            let maxAttempNumber = 0, existing = false
+            for(let item of historyanswers){
+                if (maxAttempNumber < item.attemp_number) {
+                    maxAttempNumber = item.attemp_number
+                }
+                if (equalChoice(item.choice_options, choice_options)) {
+                    existing = true
+                    break
+                }
+            }
+
+            if (existing == false) {
+                entireSame = false
+                sql = 
+                `insert into historyanswer (user_id, question_id, choice_options, choice_correct, attemp_number) values(?, ?, ?, ?, ?)`
+                const [rows] = await pool.query(sql, 
+                    [
+                        userId,
+                        qid,
+                        JSON.stringify(choice_options),
+                        choice_correct,
+                        maxAttempNumber + 1
+                    ]
+                )
+                if(rows.affectedRows == 0){
+                    throw new Error(`insert historyanswer failed`)
+                }
+            }
+            
+        }
+
+        if (entireSame) {
+            throw new Error('已存在和现在答题情况相同版本')
+        }
+
+        await connection.commit()
+    } catch (err) {
+        await connection.rollback()
+        console.log(`saveHistoryAnswerByStudyPath: ${err}`)
+        throw new Error(`${err.message}`)
+    }
+}
+
 module.exports = {
-    getQuestionCount,
+    getQuestionCountByStudyPath,
     getQuestionById,
     getIdSerialUserAnswerByStudyPath,
     getQuestionUserAnswerById,
-    judgeChoice,
-    editChoiceQuestion
+    equalChoice,
+    editChoiceQuestion,
+    saveHistoryAnswerByStudyPath
 }

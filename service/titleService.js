@@ -1,59 +1,6 @@
 const {getTitleModel} = require('../dao/TitleDao')
-const userAnswerDao = require('../dao/UserAnswerDao')
-const historyAnswerDao = require('../dao/HistoryAnswerDao')
 const favoriteTitleDao = require('../dao/FavoriteTitleDao')
 const {FavoriteTitleDto} = require('../dto/FavoriteTitleDto')
-
-async function saveHistoryAnswer(userEmail, collectionName) {
-    try {
-        const filter = {
-            fuseremail: userEmail,
-            fcollection: collectionName
-        }
-
-        const titleDao = getTitleModel(collectionName)
-        const [result, total] = await Promise.all([
-            userAnswerDao.find(filter).select('ftitleid userOption').lean(),
-            titleDao.countDocuments()
-        ])
-
-        if (result.length < total) {
-            return [-1, "还有题目未完成"]
-        }
-
-        const sortedResult = result.sort((a, b) => {
-            if (typeof a.ftitleid == 'string' && typeof b.ftitleid == 'string') {
-                return a.ftitleid.localeCompare(b.ftitleid)
-            }
-            return a.ftitleid - b.ftitleid
-        })
-
-        const qaArray = sortedResult.map(item => [item.ftitleid, item.userOption])
-
-        const exists = await historyAnswerDao.findOne({
-            fuseremail: userEmail,
-            fcollection: collectionName,
-            qa: { $eq: qaArray }
-        }).select('_id').lean()
-
-        //code 1: insert success, 0: dulpulate, -1: fail
-        if (exists) {
-            return [0, "已存在和现在答题情况相同版本"]
-        }
-
-        const historyData = {
-            fcollection: collectionName,
-            fuseremail: userEmail,
-            qa: qaArray
-        }
-
-        await historyAnswerDao.create(historyData)
-
-        return [1, "提交成功"]
-    } catch (err) {
-        throw new Error(`saveHistoryAnswer: ${err}`)
-    }
-}
 
 async function modifyImgOfTitle(collectionName, _id, imgName) {
     try {
@@ -112,33 +59,8 @@ async function addFavoriteTitle(user, titleid, comment, keywords) {
     }
 }
 
-async function editTitle(collectionName, _id, titleType, title, explanation) {
-    try {
-        const titleDao = getTitleModel(collectionName)
-        // 使用点符号语法只更新特定字段，而不是整个嵌套对象
-        const updateFields = {}
-        if (title !== undefined) {
-            updateFields[`${titleType}.title`] = title
-        }
-        if (explanation !== undefined) {
-            updateFields[`${titleType}.explanation`] = explanation
-        }
-        
-        const result = await titleDao.findOneAndUpdate(
-            { _id },
-            { $set: updateFields }
-        ).lean()
-        
-        return result
-    } catch (err) {
-        throw new Error(`editTitle: ${err}`)
-    }
-}
-
 module.exports = {
-    saveHistoryAnswer,
     modifyImgOfTitle,
     modifyImgOfExplan,
     addFavoriteTitle,
-    editTitle
 }

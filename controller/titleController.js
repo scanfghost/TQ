@@ -132,7 +132,7 @@ async function submitChoice(req, res) {
     const user = req.session.user
     try {
         const questionDto = await m2QuestionService.getQuestionById(req.body._id)
-        const isCorrect = m2QuestionService.judgeChoice(req.body.userOption, questionDto['choice'].rightOption)
+        const isCorrect = m2QuestionService.equalChoice(req.body.userOption, questionDto['choice'].rightOption)
         await m2UserService.saveUserChoice(user.id, req.body._id, req.body.userOption, isCorrect)
         const userSetting = await m2UserSettingService.getUserSetting(user.id)
         if (userSetting.instantJudge) {
@@ -183,7 +183,18 @@ async function editChoiceQuestion(req, res) {
     res.json(formatRes)
 }
 
-
+async function saveHistoryAnswerByStudyPath(req, res) {
+    let formatRes = createFormatRes()
+    const user = req.session.user
+    try {
+        await m2QuestionService.saveHistoryAnswerByStudyPath(user.id, user.subjectId, user.chapterId, user.sectionId)
+        formatRes.data.message = '历史作答版本提交成功'
+        res.json(formatRes)
+    } catch (err) {
+        formatRes.errMsg = '保存历史作答版本失败: ' + err.message
+        res.status(400).json(formatRes)
+    }
+}
 
 module.exports = {
     submitChoice,
@@ -197,4 +208,5 @@ module.exports = {
     addFavoriteTitle,
     getQuestionDto,
     editChoiceQuestion,
+    saveHistoryAnswerByStudyPath
 }

@@ -31,7 +31,7 @@ router.post('/choice', titleController.submitChoice)
 
 router.post('/modifyUserSetting', userSettingController.modifyUserSetting)
 
-router.post('/saveHistoryAnswer', controller.saveHistoryAnswer)
+router.post('/saveHistoryAnswer', titleController.saveHistoryAnswerByStudyPath)
 
 router.post('/uploadPictureOfTitle', imgUpload.single('picture'), titleController.uploadPictureOfTitle)
 
