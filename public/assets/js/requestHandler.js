@@ -192,17 +192,34 @@ function saveHistoryAnswer() {
 }
 
 function uploadPictureOfTitle() {
-    let [_id, title_no] = get_idNo()
+    let [_id, _] = get_idNo()
 
     const formData = new FormData(this)
     formData.append('_id', _id)
+
+    const serialType = formData.get('serialType')
+
+    switch (serialType) {
+        case 'append':
+            break
+        case 'replace':
+        case 'priorInsert':
+            const $selected = $('.uploadPictureOfTitle-content .imageQueue .image-queue-item.selected')
+            if ($selected.length == 0) {
+                toggleResponseTip(`点击指定${serialType == 'replace' ? '替换' : '前插'}的图片`, 4000)
+                return
+            }
+            const $imageAnchorName = $selected.attr('src').replace(/^\/assets\/img\//, '')
+            formData.append('imageAnchorName', $imageAnchorName)
+            break
+    }
 
     rs.uploadPictureOfTitle(formData)
         .done(() => {
             toggleResponseTip('上传成功, 即将刷新页面', 3000)
             idleModalCard()
             setTimeout(() => {
-                window.location.href = `/TQ/${_id}/${title_no}`
+                window.location.href = `/TQ/${_id}`
             }, 4000);
         })
         .fail((xhr, status, err) => {
@@ -385,6 +402,49 @@ function submitTitle() {
         })
 }
 
+function fetchAllTitleImage() {
+    const [qid, _] = get_idNo()
+    const p = $('.uploadPictureOfTitle-content')
+    const $imageQueue = p.find('.imageQueue').first()
+    const $radioContainer = p.find('.selectSerialType')
+    $radioContainer.find('input[value="append"]').prop('checked', false);
+    $radioContainer.find('input[value="replace"]').prop('checked', false);
+    $radioContainer.find('input[value="priorInsert"]').prop('checked', false);
+    $imageQueue.empty()
+    rs.fetchAllTitleImage(qid)
+        .done(res => {
+            const title_no = $('#title_no').text().trim().replace(/\.$/, '')
+            p.find('form').find('div').first().html(`为第 ${title_no} 题添加题干图片`)
+            if (res.data.imageDtoList && res.data.imageDtoList.length > 0) {
+                const sortedImages = [...res.data.imageDtoList].sort((a, b) => a.serial - b.serial)
+                sortedImages.forEach(img => {
+                    const $img = $('<img>',
+                        {
+                            src: `/assets/img/${img.fileName}`,
+                            class: 'image-queue-item'
+                        }
+                    )
+                    $imageQueue.append($img)
+                })
+            } else {
+                $radioContainer.find('input[value="replace"]').prop('disabled', true);
+                $radioContainer.find('input[value="priorInsert"]').prop('disabled', true);
+                $imageQueue.append($('<div>')).text('暂无图片')
+            }
+            activeModalCard('.uploadPictureOfTitle-content')
+        })
+        .fail((xhr, status, err) => {
+            const formatRes = JSON.parse(xhr.responseText)
+            toggleResponseTip(formatRes.errMsg, 4000)
+        })
+}
+
+function selectImageQueueItem() {
+    $('.uploadPictureOfTitle-content .imageQueue .image-queue-item').removeClass('selected');
+
+    $(this).addClass('selected');
+}
+
 export default {
     singleChoice,
     fetchTitle,
@@ -403,4 +463,6 @@ export default {
     addFavoriteTitle,
     editTitle,
     submitTitle,
+    fetchAllTitleImage,
+    selectImageQueueItem
 }

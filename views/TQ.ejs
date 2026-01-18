@@ -27,26 +27,15 @@
             <div class="explanation-content">
                 <% if (userSetting.instantJudge && questionDto[questionDto.type].useranswer.userOption) {%>
                     <%- include('./partials/explanationContent.ejs') -%>
-                <% } %>
+                        <% } %>
             </div>
         </div>
         <div class="table-content">
             <ul>
                 <% for(var i=1; i <=pageList.length; i++){ %>
-                    <% 
-                        const item=pageList[i - 1]; 
-                        let className='' ; 
-                        if (item.userOption) { 
-                            className+='answered' ; 
-                            if (userSetting && userSetting.instantJudge) { 
-                                if(item.isCorrect) { 
-                                    className +=' right' ; 
-                                } else {
-                                    className +=' wrong' ; 
-                                } 
-                            } 
-                        } 
-                    %>
+                    <% const item=pageList[i - 1]; let className='' ; if (item.userOption) { className+='answered' ; if
+                        (userSetting && userSetting.instantJudge) { if(item.isCorrect) { className +=' right' ; } else {
+                        className +=' wrong' ; } } } %>
                         <li id="serial<%= pageList[i-1].id %>" class="<%= className %>">
                             <%= i %>
                         </li>
@@ -67,7 +56,8 @@
             <div class="actions-item" id="sectionName" style="border-bottom: 1px solid rgb(146, 144, 144);">
                 <%= user.currentSection %>
             </div>
-            <div class="actions-item" id="AIConsultant" style="border-bottom: 1px solid rgb(146, 144, 144); cursor: pointer;">
+            <div class="actions-item" id="AIConsultant"
+                style="border-bottom: 1px solid rgb(146, 144, 144); cursor: pointer;">
                 <span style="display: inline-block;
                 padding: 2px 6px;
                 font-size: 11px;
@@ -83,14 +73,14 @@
             </div>
             <div class="action actions-item" id="selectSubject">选择科目与章节</div>
             <div class="action actions-item" id="saveAnswer">提交作答版本</div>
-            <% if(user && user.role=='admin') { %>
-            <div class="action actions-item" id="uploadPictureOfTitle">添加题干图片</div>
-            <div class="action actions-item" id="uploadPictureOfExplan">添加解释图片</div>
-            <div class="action actions-item" id="editTitle">编辑题目</div>
-            <% } %>
-            <div class="action actions-item" id="addFavoriteTitle">加入收藏</div>
-            <div class="action actions-item" id="restartAnswer">重新做题</div>
-            <div class="action actions-item" id="setting">偏好设置</div>
+            <% if(user && user.role=='admin' ) { %>
+                <div class="action actions-item" id="uploadPictureOfTitle">添加题干图片</div>
+                <div class="action actions-item" id="uploadPictureOfExplan">添加解释图片</div>
+                <div class="action actions-item" id="editTitle">编辑题目</div>
+                <% } %>
+                    <div class="action actions-item" id="addFavoriteTitle">加入收藏</div>
+                    <div class="action actions-item" id="restartAnswer">重新做题</div>
+                    <div class="action actions-item" id="setting">偏好设置</div>
         </div>
     </div>
 
@@ -103,6 +93,14 @@
     <div class="uploadPictureOfTitle-content modalCard">
         <form>
             <div></div>
+            <div class="selectSerialType">
+                <label><input type="radio" name="serialType" value="append" required> <span>追加</span></label>
+                <label><input type="radio" name="serialType" value="replace" required> <span>替换</span></label>
+                <label><input type="radio" name="serialType" value="priorInsert" required> <span>前插</span></label>
+            </div>
+            <div class="imageQueue">
+                    
+            </div>
             <input type="file" name="picture" id="inputPictureOfTitle" required>
             <input type="submit" value="上传">
         </form>
@@ -117,13 +115,13 @@
     </div>
 
     <div class="addFavoriteTitle-content modalCard">
-            <form>
-                <div></div>
-                <input type="text" name="keywords" id="inputKeywords" placeholder="添加收藏关键词(多个关键词请用逗号分隔)" required>
-                <textarea name="comment" id="inputComment" placeholder="添加收藏备注(可选)"></textarea>
-                    <small>提示：关键词和备注用于搜索收藏的题目</small>
-                <input type="submit" value="加入收藏">
-            </form>
+        <form>
+            <div></div>
+            <input type="text" name="keywords" id="inputKeywords" placeholder="添加收藏关键词(多个关键词请用逗号分隔)" required>
+            <textarea name="comment" id="inputComment" placeholder="添加收藏备注(可选)"></textarea>
+            <small>提示：关键词和备注用于搜索收藏的题目</small>
+            <input type="submit" value="加入收藏">
+        </form>
     </div>
 
     <div class="editTitle-content modalCard">

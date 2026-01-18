@@ -132,7 +132,10 @@ body {
 .titleImg-content,
 .explanImg-content {
   margin-top: 20px;
-  height: 220px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
 }
 
 .titleImg-content:not(:has(img)),
@@ -147,7 +150,7 @@ body {
   max-width: 100%;
   margin: 0 auto;
   width: auto;
-  max-height: 100%;
+  max-height: 250px;
 }
 
 .table-content {
@@ -273,7 +276,7 @@ body {
 .uploadPictureOfTitle-content,
 .uploadPictureOfExplan-content {
   width: 300px;
-  height: 100px;
+  height: auto;
   top: calc(40vh - 50px);
   left: calc(50vw - 150px);
 }
@@ -287,6 +290,58 @@ body {
 .uploadPictureOfTitle-content form input:nth-child(1),
 .uploadPictureOfExplan-content form input:nth-child(1) {
   width: 100%;
+}
+
+.selectSerialType {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.selectSerialType label {
+  display: flex;
+  font-size: small;
+  width: 30%;
+  align-items: center;
+}
+
+.selectSerialType label input {
+  display: block;
+  width: 30% !important;
+  margin: 0 auto;
+}
+
+.selectSerialType label span {
+  flex: 1;
+}
+
+.imageQueue {
+  background-color: #e9e9e9;
+  min-height: 20px;
+  padding: 20px;
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.image-queue-item{
+  display: block;
+  width: 60px;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.image-queue-item {
+  cursor: pointer;
+  border: 3px solid transparent; /* 默认透明边框 */
+  transition: border-color 0.2s;
+}
+
+.image-queue-item.selected {
+  border-color: #3ad296; /* 选中时的蓝色边框（可自定义） */
 }
 
 .addFavoriteTitle-content {
@@ -309,7 +364,7 @@ body {
   margin-top: 20px;
 }
 
-#inputKeywords{
+#inputKeywords {
   height: 30px;
 }
 

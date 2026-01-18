@@ -21,15 +21,13 @@ function createBasicUserAnswer(choice_options, choice_correct) {
 }
 
 class QuestionDto {
-    constructor(id, type, title, basicChoice, explantion, title_imgs, explain_imgs, subject_id, chapter_id, section_id, serial) {
+    constructor(id, type, title, basicChoice, explantion, subject_id, chapter_id, section_id, serial) {
         if (!TYPE.includes(type)) {
             throw new Error('constructor of question: type isnt one of "choice" or "fill" or "answer"')
         }
         this.id = id
         this.type = type
         this.explantion = explantion
-        this.titleImgs = title_imgs
-        this.explainImgs = explain_imgs
         this.subjectId = subject_id 
         this.chapterId = chapter_id
         this.sectionId = section_id
@@ -48,6 +46,16 @@ class QuestionDto {
 
     insertChoiceUserAnswer(basicUserAnswer){
         this.choice.useranswer = basicUserAnswer
+    }
+
+    insertTitleImages(titleImgs){
+        if (titleImgs == undefined) {
+            throw new Error(`cannot insert undefined image into questionDto`)
+        }
+        if (!Array.isArray(titleImgs)) {
+            throw new Error(`${titleImgs} is not Array`)
+        }
+        this.titleImgs = titleImgs
     }
 
     processChoiceData(basicChoice) {

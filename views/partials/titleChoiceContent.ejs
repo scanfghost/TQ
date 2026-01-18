@@ -69,7 +69,9 @@
 </div>
 
 <div class="titleImg-content">
-  <% if (questionDto.titleImgs) { %>
-      <img src="/assets/img/<%= questionDto.titleImgs[0] %>" alt="">
-    <% } %>    
+  <% if (questionDto.titleImgs && questionDto.titleImgs.length > 0) { %>
+    <% questionDto.titleImgs.forEach(img => { %>
+      <img src="/assets/img/<%= img.fileName %>" class="title-img" />
+    <% }); %>
+  <% } %>
 </div>

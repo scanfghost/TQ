@@ -1,5 +1,6 @@
 const pool = require('../../config/mysql2/connectionPool')
 const { QuestionDto, createBasicChoice, createBasicUserAnswer } = require('../../dto/QuestionDto')
+const m2ImageService = require('./imageService')
 
 async function getQuestionCountByStudyPath(subjectId, chapterId, sectionId) {
     const sql = 'select count(*) as count from question where subject_id = ? and chapter_id = ? and section_id = ?'
@@ -57,7 +58,9 @@ async function getQuestionById(questionId) {
             throw new Error(`题目不存在`)
         }
 
-        return new QuestionDto(
+        const imageDtoList = await m2ImageService.getAllTitleImageByQuestionId(questionId)
+
+        let questionDto = new QuestionDto(
             result[0].id,
             result[0].type,
             result[0].title,
@@ -67,13 +70,17 @@ async function getQuestionById(questionId) {
                 result[0].individual_options,
                 result[0].right_option),
             result[0].explantion,
-            result[0].title_imgs,
-            result[0].explan_imgs,
             result[0].subject_id,
             result[0].chapter_id,
             result[0].section_id,
             result[0].serial
         )
+
+        if (imageDtoList) {
+            questionDto.insertTitleImages(imageDtoList)
+        }
+
+        return questionDto
     } catch (err) {
         throw new Error(`getQuestionById: ${err.message}`)
     }
@@ -130,6 +137,8 @@ async function getQuestionUserAnswerById(questionId, user) {
             throw new Error(`题目不存在`)
         }
 
+        const imageDtoList = await m2ImageService.getAllTitleImageByQuestionId(questionId)
+
         const questionDto = new QuestionDto(
             result[0].id,
             result[0].type,
@@ -140,14 +149,17 @@ async function getQuestionUserAnswerById(questionId, user) {
                 result[0].individual_options,
                 result[0].right_option),
             result[0].explantion,
-            result[0].title_imgs,
-            result[0].explan_imgs,
             result[0].subject_id,
             result[0].chapter_id,
             result[0].section_id,
             result[0].serial
         )
+        
         questionDto.insertChoiceUserAnswer(createBasicUserAnswer(result[0].userOption, result[0].isCorrect))
+        if (imageDtoList) {
+            questionDto.insertTitleImages(imageDtoList)
+        }
+        
         return questionDto
     } catch (err) {
         throw new Error(`getQuestionUserAnswerById: ${err}`)

@@ -27,18 +27,15 @@ $(document).ready(() => {
     });
 
     $('#restartAnswer').on('click', function () {
-        rh.deleteAnswer().call(this)
+        rh.deleteAnswer.call(this)
     })
 
     $('#saveAnswer').on('click', function () {
-        rh.saveHistoryAnswer().call(this)
+        rh.saveHistoryAnswer.call(this)
     })
 
     $('#uploadPictureOfTitle').on('click', function () {
-        const title_no = $('#title_no').text().trim().replace(/\.$/, '')
-        const p = $('.uploadPictureOfTitle-content')
-        p.find('form').find('div').first().html(`为第 ${title_no} 题添加题干图片`)
-        activeModalCard('.uploadPictureOfTitle-content')
+        rh.fetchAllTitleImage.call(this)
     })
 
     $('.uploadPictureOfTitle-content form').on('submit', function (e) {
@@ -110,4 +107,7 @@ $(document).ready(() => {
         idleModalCard()
     })
 
+    $('.uploadPictureOfTitle-content .imageQueue').on('click', '.image-queue-item', function () {
+        rh.selectImageQueueItem.call(this)
+    });
 })

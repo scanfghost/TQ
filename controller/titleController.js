@@ -8,6 +8,7 @@ const m2QuestionService = require('../service/m2/questionService')
 const m2UserSettingService = require('../service/m2/userSettingService')
 const m2UserService = require('../service/m2/userService')
 const m2StudyPathService = require('../service/m2/studyPathService')
+const m2ImageService = require('../service/m2/imageService')
 const { createBasicUserAnswer } = require('../dto/QuestionDto')
 
 const templateDir = path.join(__dirname, '../views')
@@ -32,7 +33,7 @@ async function getQuestion(req, res) {
     let formatRes = createFormatRes()
     try {
         const questionDto = await m2QuestionService.getQuestionUserAnswerById(req.params.id, req.session.user)
-        formatRes.html.titleChoiceContent = await ejs.renderFile(templateDir + '/partials/titleChoiceContent.ejs', { questionDto})
+        formatRes.html.titleChoiceContent = await ejs.renderFile(templateDir + '/partials/titleChoiceContent.ejs', { questionDto })
         if (questionDto[questionDto.type].useranswer.userOption) {
             formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { questionDto })
         }
@@ -63,18 +64,27 @@ async function uploadPictureOfTitle(req, res) {
         res.json(formatRes)
         return
     }
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
-    const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
-    const titleDto = await titleService.getTitleById(collectionName, req.body._id)
-    const hashInput = titleDto.title + JSON.stringify(titleDto.options)
-    const ext = path.extname(req.file.filename)
-    const hash = md5(hashInput, 12)
-    const newFilename = `${hash}${ext}`
-    const newFilePath = path.join(process.env.imgStoreFolder, newFilename)
+    let newFileName
+    try {
+        newFileName = m2ImageService.getUUIDFileName(req.file.filename)
+        switch (req.body.serialType) {
+            case 'append':
+                await m2ImageService.appendImageByQuestionId(req.body._id, newFileName, "title")
+                break;
+            case 'replace':
+                await m2ImageService.replaceImageByQuestionId(req.body._id, newFileName, "title")
+                break;
+            case 'priorInsert':
+                await m2ImageService.priorInsertImageByQuestionId(req.body._id, newFileName, "title")
+                break;
+            default:
+                throw new Error('serialType is not one of ["append", "replace", "priorInsert"]')
+        }
+    } catch (err) {
+        console.log(`uploadPictureOfTitle: ${err.message}`)
+    }
+    const newFilePath = path.join(process.env.imgStoreFolder, newFileName)
     await fs.rename(req.file.path, newFilePath)
-    titleService.modifyImgOfTitle(collectionName, req.body._id, newFilename)
     res.json(formatRes)
 }
 
@@ -193,6 +203,19 @@ async function saveHistoryAnswerByStudyPath(req, res) {
     }
 }
 
+async function getAllTitleImage(req, res) {
+    let formatRes = createFormatRes()
+    try {
+        const imageDtoList = await m2ImageService.getAllTitleImageByQuestionId(req.params.id)
+        formatRes.data.imageDtoList = imageDtoList
+    } catch (err) {
+        console.log(`getAllTitleImage: ${err.message}`)
+        formatRes.errMsg = err.message
+        res.status(400)
+    }
+    res.json(formatRes)
+}
+
 module.exports = {
     submitChoice,
     getTQPage,
@@ -205,5 +228,6 @@ module.exports = {
     addFavoriteTitle,
     getQuestionDto,
     editChoiceQuestion,
-    saveHistoryAnswerByStudyPath
+    saveHistoryAnswerByStudyPath,
+    getAllTitleImage
 }

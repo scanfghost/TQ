@@ -122,7 +122,12 @@ function editTitle(_id, title, explanation) {
     })
 }
 
-
+function fetchAllTitleImage(questionId) {
+    return $.ajax({
+        type: "GET",
+        url: "/fetchAllTitleImage/" + questionId
+    })
+}
 
 export default {
     fetchTitle,
@@ -139,4 +144,5 @@ export default {
     addFavoriteTitle,
     fetchTitleDto,
     editTitle,
+    fetchAllTitleImage
 }
