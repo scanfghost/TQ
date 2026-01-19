@@ -46,25 +46,94 @@ async function appendImageByQuestionId(questionId, fileName, type) {
 
     } catch (err) {
         console.log(`appendImageByQuestionId: ${err}`)
+        throw new Error(`${err.message}`)
     }
 }
 
-/**
- * @param {string} questionId 
- * @param {string} filename 
- * @param {'title' | 'explanation'} type 
- */
-async function replaceImageByQuestionId(questionId, fileName, type) {
-    
+async function replaceImageByQuestionId(questionId, fileName, anchorName) {
+    let sql = 
+    `update image set name = ? where question_id = ? and name = ?`
+    try {
+        const [rows] = await pool.query(sql,
+            [
+                fileName,
+                questionId,
+                anchorName
+            ]
+        )
+
+        if (rows.affectedRows == 0) {
+            throw new Error(`replace image failed, original questionId ${questionId} fileName ${anchorName}`)
+        }
+
+    } catch (err) {
+        console.log(`replaceImageByQuestionId: ${err}`)
+        throw new Error(`${err.message}`)
+    }
 }
 
-/**
- * @param {string} questionId 
- * @param {string} filename 
- * @param {'title' | 'explanation'} type 
- */
-async function priorInsertImageByQuestionId(questionId, fileName, type) {
+//后期需要并发安全控制，加锁
+async function priorInsertImageByQuestionId(questionId, fileName, type, anchorName) {
+    if (!imageType.includes(type)) {
+        throw new Error(`imageType "${type}" is not question or explanation`)
+    }
+    let connection, sql
+    
+    try {
+        connection = await pool.getConnection()
+        await connection.beginTransaction()
 
+        sql = 
+        `select serial from image where question_id = ?and name = ? limit 1`
+        const [anchorRows] = await pool.query(sql,
+            [
+                questionId,
+                anchorName
+            ]
+        )
+
+        if (anchorRows.length == 0) {
+            throw new Error(`未找到锚点图片: ${anchorName}`)
+        }
+
+        const anchorSerial = anchorRows[0].serial
+
+        sql = 
+        `update image set serial = serial + 1 where question_id = ? and serial >= ?`
+
+        const [updateResult] = await pool.query(sql,
+            [
+                questionId,
+                anchorSerial
+            ]
+        )
+
+        sql = 
+        `insert into image (question_id, name, type, serial) values(?, ?, ?, ?)`
+
+        const [insertResult] = await pool.query(sql,
+            [
+                questionId,
+                fileName,
+                type,
+                anchorSerial
+            ]
+        )
+
+        if (insertResult.affectedRows == 0) {
+            throw new Error(`priorInsert image failed, original questionId ${questionId} fileName ${anchorName}`)
+        }
+
+        await connection.commit()
+    } catch (err) {
+        await connection.rollback()
+        console.log(`priorInsertImageByQuestionId: ${err}`)
+        throw new Error(`${err.message}`)
+    }finally{
+        if (connection) {
+            connection.release()
+        }
+    }
 }
 
 function getUUIDFileName(originalFileName) {

@@ -72,10 +72,10 @@ async function uploadPictureOfTitle(req, res) {
                 await m2ImageService.appendImageByQuestionId(req.body._id, newFileName, "title")
                 break;
             case 'replace':
-                await m2ImageService.replaceImageByQuestionId(req.body._id, newFileName, "title")
+                await m2ImageService.replaceImageByQuestionId(req.body._id, newFileName, req.body.imageAnchorName)
                 break;
             case 'priorInsert':
-                await m2ImageService.priorInsertImageByQuestionId(req.body._id, newFileName, "title")
+                await m2ImageService.priorInsertImageByQuestionId(req.body._id, newFileName, "title", req.body.imageAnchorName)
                 break;
             default:
                 throw new Error('serialType is not one of ["append", "replace", "priorInsert"]')
