@@ -28,11 +28,11 @@ function saveHistoryAnswer() {
     })
 }
 
-function uploadPictureOfTitle(formData) {
+function editImage(formData) {
     return $.ajax({
         type: 'POST',
         contentType: false,
-        url: '/uploadPictureOfTitle',
+        url: '/editImage',
         data: formData,
         processData: false
     })
@@ -134,7 +134,7 @@ export default {
     submitChoice,
     deleteAnswer,
     saveHistoryAnswer,
-    uploadPictureOfTitle,
+    editImage,
     uploadPictureOfExplan,
     modifyUserSetting,
     modifyUserSubject,

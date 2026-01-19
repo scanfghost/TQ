@@ -191,32 +191,58 @@ function saveHistoryAnswer() {
         })
 }
 
-function uploadPictureOfTitle() {
+function uploadPictureOfTitle(){
+    editImage("title", this)
+}
+
+function uploadPictureOfExplan() {
+    editImage("explanation", this)
+}
+
+function editImage(type, formContext) {
+    if (!["title", "explanation"].includes(type)) {
+        throw new Error(`${type} must be one of ["title", "explanation"]`)
+    }
     let [_id, _] = get_idNo()
 
-    const formData = new FormData(this)
+    const formData = new FormData(formContext)
     formData.append('_id', _id)
+    formData.append('type', type)
 
     const serialType = formData.get('serialType')
+
+    const $selected = $('.uploadPictureOfTitle-content .imageQueue .image-queue-item.selected')
+    if ($selected.length == 0) {
+        toggleResponseTip(`点击指定${serialType == 'replace' ? '替换' : serialType == 'priorInsert' ? '前插' : '删除'}的图片`, 4000)
+        return
+    }
 
     switch (serialType) {
         case 'append':
             break
         case 'replace':
         case 'priorInsert':
-            const $selected = $('.uploadPictureOfTitle-content .imageQueue .image-queue-item.selected')
-            if ($selected.length == 0) {
-                toggleResponseTip(`点击指定${serialType == 'replace' ? '替换' : '前插'}的图片`, 4000)
+            if ($selected.length > 1) {
+                toggleResponseTip(`${serialType == 'replace' ? '替换' : '前插'}图片数量为一张`, 4000)
                 return
             }
             const $imageAnchorName = $selected.attr('src').replace(/^\/assets\/img\//, '')
             formData.append('imageAnchorName', $imageAnchorName)
             break
+        case 'remove':
+            if (!confirm("是否确认删除选中的图片?")) {
+                return
+            }
+            $selected.each(function (i, e) {
+                formData.append('fileNameList', $(e).attr('src').replace(/^\/assets\/img\//, ''))
+            })
+            
+            break
     }
 
-    rs.uploadPictureOfTitle(formData)
+    rs.editImage(formData)
         .done(() => {
-            toggleResponseTip('上传成功, 即将刷新页面', 3000)
+            toggleResponseTip('操作成功, 即将刷新页面', 3000)
             idleModalCard()
             setTimeout(() => {
                 window.location.href = `/TQ/${_id}`
@@ -224,31 +250,9 @@ function uploadPictureOfTitle() {
         })
         .fail((xhr, status, err) => {
             const formatRes = JSON.parse(xhr.responseText)
-            toggleResponseTip(`上传失败: ${formatRes.errMsg}`, 4000)
+            toggleResponseTip(`操作失败: ${formatRes.errMsg}`, 4000)
         })
 }
-
-function uploadPictureOfExplan() {
-    let [_id, title_no] = get_idNo()
-
-    const formData = new FormData(this)
-    formData.append('_id', _id)
-
-    rs.uploadPictureOfExplan(formData)
-        .done(() => {
-            toggleResponseTip('上传成功, 即将刷新页面', 3000)
-            idleModalCard()
-            setTimeout(() => {
-                window.location.href = `/TQ/${_id}/${title_no}`
-            }, 4000);
-        })
-        .fail((xhr, status, err) => {
-            const formatRes = JSON.parse(xhr.responseText)
-            toggleResponseTip(`上传失败: ${formatRes.errMsg}`, 4000)
-        })
-}
-
-
 
 function fetchSubjectForm() {
     const switchSubject = $('.switchSubject-content')
@@ -440,8 +444,40 @@ function fetchAllTitleImage() {
 }
 
 function selectImageQueueItem() {
-    $('.uploadPictureOfTitle-content .imageQueue .image-queue-item').removeClass('selected');
+    const $p = $('.uploadPictureOfTitle-content')
+    const serialType = $p.find('input[name="serialType"]:checked').val()
+    
+    if ($(this).hasClass('selected')) {
+        $(this).removeClass('selected')
+    }else{
+        if (serialType != 'remove') {
+            $('.uploadPictureOfTitle-content .imageQueue .image-queue-item').removeClass('selected')
+        }
+        $(this).addClass('selected');
+    }
+}
 
+function selectSerialTypeItem() {
+    const serialType = $(this).find('input[name="serialType"]:checked').val()
+    $(this).find('input[name="submit"]').prop('disabled', false)
+    const $p = $('.uploadPictureOfTitle-content')
+    $p.find('input[name="picture"]').prop('disabled', true)
+    $p.find('input[name="submit"]').prop('disabled', true).val('确认')
+    switch (serialType) {
+        case 'append':
+        case 'replace':
+        case 'priorInsert':
+            $p.find('input[name="picture"]').prop('disabled', false)
+            $p.find('input[name="submit"]').prop('disabled', false).val('上传')
+            break
+        case 'remove':
+            $p.find('input[name="picture"]').prop('disabled', true)
+            $p.find('input[name="submit"]').prop('disabled', false).val('移除')
+            break
+    }
+    if (serialType != 'remove') {
+        $('.uploadPictureOfTitle-content .imageQueue .image-queue-item').removeClass('selected')
+    }
     $(this).addClass('selected');
 }
 
@@ -464,5 +500,6 @@ export default {
     editTitle,
     submitTitle,
     fetchAllTitleImage,
-    selectImageQueueItem
+    selectImageQueueItem,
+    selectSerialTypeItem
 }

@@ -275,10 +275,10 @@ body {
 
 .uploadPictureOfTitle-content,
 .uploadPictureOfExplan-content {
-  width: 300px;
+  width: 420px;
   height: auto;
-  top: calc(40vh - 50px);
-  left: calc(50vw - 150px);
+  top: calc(35vh - 50px);
+  left: calc(50vw - 210px);
 }
 
 .uploadPictureOfTitle-content form input,

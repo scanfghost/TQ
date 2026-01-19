@@ -35,7 +35,7 @@ router.post('/modifyUserSetting', userSettingController.modifyUserSetting)
 
 router.post('/saveHistoryAnswer', titleController.saveHistoryAnswerByStudyPath)
 
-router.post('/uploadPictureOfTitle', imgUpload.single('picture'), titleController.uploadPictureOfTitle)
+router.post('/editImage', imgUpload.single('picture'), titleController.editImage)
 
 router.post('/uploadPictureOfExplan', imgUpload.single('picture'), titleController.uploadPictureOfExplan)
  

@@ -110,4 +110,8 @@ $(document).ready(() => {
     $('.uploadPictureOfTitle-content .imageQueue').on('click', '.image-queue-item', function () {
         rh.selectImageQueueItem.call(this)
     });
+
+    $('.uploadPictureOfTitle-content .selectSerialType').on('click', function () {
+        rh.selectSerialTypeItem.call(this)
+    });
 })

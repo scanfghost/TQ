@@ -1,9 +1,9 @@
 const pool = require('../../config/mysql2/connectionPool')
 const path = require('path')
-const {v4: uuidv4} = require('uuid')
+const { v4: uuidv4 } = require('uuid')
 const { ImageDto } = require('../../dto/ImageDto')
 
-const imageType = ['title' , 'explanation']
+const imageType = ['title', 'explanation']
 
 /**
  * @param {string} questionId 
@@ -14,8 +14,8 @@ async function appendImageByQuestionId(questionId, fileName, type) {
     if (!imageType.includes(type)) {
         throw new Error(`imageType "${type}" is not question or explanation`)
     }
-    let sql = 
-    `select name from image where question_id = ? and type = ? order by serial asc`
+    let sql =
+        `select name from image where question_id = ? and type = ? order by serial asc`
     try {
         const [names] = await pool.query(sql,
             [
@@ -29,8 +29,8 @@ async function appendImageByQuestionId(questionId, fileName, type) {
             newSerial = names.length + 1
         }
 
-        sql = 
-        `insert into image (question_id, name, type, serial) values(?, ?, ?, ?)`
+        sql =
+            `insert into image (question_id, name, type, serial) values(?, ?, ?, ?)`
         const [result] = await pool.query(sql,
             [
                 questionId,
@@ -51,8 +51,8 @@ async function appendImageByQuestionId(questionId, fileName, type) {
 }
 
 async function replaceImageByQuestionId(questionId, fileName, anchorName) {
-    let sql = 
-    `update image set name = ? where question_id = ? and name = ?`
+    let sql =
+        `update image set name = ? where question_id = ? and name = ?`
     try {
         const [rows] = await pool.query(sql,
             [
@@ -78,13 +78,13 @@ async function priorInsertImageByQuestionId(questionId, fileName, type, anchorNa
         throw new Error(`imageType "${type}" is not question or explanation`)
     }
     let connection, sql
-    
+
     try {
         connection = await pool.getConnection()
         await connection.beginTransaction()
 
-        sql = 
-        `select serial from image where question_id = ?and name = ? limit 1`
+        sql =
+            `select serial from image where question_id = ?and name = ? limit 1`
         const [anchorRows] = await pool.query(sql,
             [
                 questionId,
@@ -98,8 +98,8 @@ async function priorInsertImageByQuestionId(questionId, fileName, type, anchorNa
 
         const anchorSerial = anchorRows[0].serial
 
-        sql = 
-        `update image set serial = serial + 1 where question_id = ? and serial >= ?`
+        sql =
+            `update image set serial = serial + 1 where question_id = ? and serial >= ?`
 
         const [updateResult] = await pool.query(sql,
             [
@@ -108,8 +108,8 @@ async function priorInsertImageByQuestionId(questionId, fileName, type, anchorNa
             ]
         )
 
-        sql = 
-        `insert into image (question_id, name, type, serial) values(?, ?, ?, ?)`
+        sql =
+            `insert into image (question_id, name, type, serial) values(?, ?, ?, ?)`
 
         const [insertResult] = await pool.query(sql,
             [
@@ -129,7 +129,7 @@ async function priorInsertImageByQuestionId(questionId, fileName, type, anchorNa
         await connection.rollback()
         console.log(`priorInsertImageByQuestionId: ${err}`)
         throw new Error(`${err.message}`)
-    }finally{
+    } finally {
         if (connection) {
             connection.release()
         }
@@ -142,9 +142,9 @@ function getUUIDFileName(originalFileName) {
     return uuidv4() + ext
 }
 
-async function getAllTitleImageByQuestionId(questionId){
-    const sql = 
-    `select * from image where question_id = ? and type = ? order by serial asc`
+async function getAllTitleImageByQuestionId(questionId) {
+    const sql =
+        `select * from image where question_id = ? and type = ? order by serial asc`
 
     try {
         const [result] = await pool.query(sql,
@@ -161,7 +161,60 @@ async function getAllTitleImageByQuestionId(questionId){
         return result.map(item => new ImageDto(item.question_id, item.name, item.serial))
     } catch (err) {
         console.log(`getAllImageByQuestionId: ${err}`)
-        throw new Error(`${err}`)        
+        throw new Error(`${err}`)
+    }
+}
+
+async function removeImageByNames(questionId, nameList) {
+    let connection
+    try {
+        if (!Array.isArray(nameList)) {
+            throw new Error('nameList is not array')
+        }
+        connection = await pool.getConnection()
+        await connection.beginTransaction()
+
+        const placeholders = nameList.map(() => '?').join(', ')
+        let sql =
+            `delete from image where question_id = ? and name in (${placeholders})`
+        const [deleteRows] = await connection.query(sql, [questionId, ...nameList])
+        
+        if (deleteRows.affectedRows == 0) {
+            throw new Error('delete 0 doc')
+        }
+
+        sql = 
+        `update image
+        set 
+            serial = (
+                select new_serial
+                from (
+                    select 
+                        id,
+                        row_number() over (order by serial asc) as new_serial
+                    from image
+                    where question_id = ?
+                ) as ranked
+                where ranked.id = image.id
+            )
+        where question_id = ?`
+
+        const [updateRows] = await connection.query(sql,
+            [
+                questionId,
+                questionId
+            ]
+        )
+
+        if (updateRows.affectedRows == 0) {
+            throw new Error('update 0 doc')
+        }
+
+        await connection.commit()
+    } catch (err) {
+        await connection.rollback()
+        console.log(`removeImageByNames: ${err}`)
+        throw new Error(`${err.message}`)
     }
 }
 
@@ -170,5 +223,6 @@ module.exports = {
     replaceImageByQuestionId,
     priorInsertImageByQuestionId,
     getAllTitleImageByQuestionId,
-    getUUIDFileName
+    getUUIDFileName,
+    removeImageByNames
 }

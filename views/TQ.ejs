@@ -94,15 +94,16 @@
         <form>
             <div></div>
             <div class="selectSerialType">
-                <label><input type="radio" name="serialType" value="append" required> <span>追加</span></label>
+                <label><input type="radio" name="serialType" value="append" required> <span>末尾追加</span></label>
                 <label><input type="radio" name="serialType" value="replace" required> <span>替换</span></label>
                 <label><input type="radio" name="serialType" value="priorInsert" required> <span>前插</span></label>
+                <label><input type="radio" name="serialType" value="remove" required> <span>删除(可多选)</span></label>
             </div>
             <div class="imageQueue">
                     
             </div>
-            <input type="file" name="picture" id="inputPictureOfTitle" required>
-            <input type="submit" value="上传">
+            <input type="file" name="picture" id="inputPictureOfTitle" required disabled>
+            <input type="submit" name="submit" value="确认" disabled>
         </form>
     </div>
 

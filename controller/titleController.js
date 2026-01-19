@@ -54,37 +54,47 @@ async function getQuestionDto(req, res) {
     res.json(formatRes)
 }
 
-async function uploadPictureOfTitle(req, res) {
+async function editImage(req, res) {
     let formatRes = createFormatRes()
     try {
-        await fs.access(req.file.path)
-    } catch (err) {
-        res.status(400)
-        formatRes.errMsg = 'uploadPictureOfTitle: req.file.path is empty'
-        res.json(formatRes)
-        return
-    }
-    let newFileName
-    try {
-        newFileName = m2ImageService.getUUIDFileName(req.file.filename)
         switch (req.body.serialType) {
             case 'append':
-                await m2ImageService.appendImageByQuestionId(req.body._id, newFileName, "title")
-                break;
             case 'replace':
-                await m2ImageService.replaceImageByQuestionId(req.body._id, newFileName, req.body.imageAnchorName)
-                break;
             case 'priorInsert':
-                await m2ImageService.priorInsertImageByQuestionId(req.body._id, newFileName, "title", req.body.imageAnchorName)
-                break;
+                try {
+                    await fs.access(req.file.path)
+                } catch (err) {
+                    res.status(400)
+                    formatRes.errMsg = 'uploadPictureOfTitle: req.file.path is empty'
+                    res.json(formatRes)
+                    return
+                }
+                let newFileName
+                newFileName = m2ImageService.getUUIDFileName(req.file.filename)
+                switch (req.body.serialType) {
+                    case 'append':
+                        await m2ImageService.appendImageByQuestionId(req.body._id, newFileName, req.body.type)
+                        break;
+                    case 'replace':
+                        await m2ImageService.replaceImageByQuestionId(req.body._id, newFileName, req.body.imageAnchorName)
+                        break;
+                    case 'priorInsert':
+                        await m2ImageService.priorInsertImageByQuestionId(req.body._id, newFileName, req.body.type, req.body.imageAnchorName)
+                        break;
+                }
+                const newFilePath = path.join(process.env.imgStoreFolder, newFileName)
+                await fs.rename(req.file.path, newFilePath)
+            case 'remove':
+                //软删除，文件还在
+                await m2ImageService.removeImageByNames(req.body._id, req.body.fileNameList)
+                break
             default:
-                throw new Error('serialType is not one of ["append", "replace", "priorInsert"]')
+                throw new Error('serialType is not one of ["append", "replace", "priorInsert", "remove"]')
         }
     } catch (err) {
-        console.log(`uploadPictureOfTitle: ${err.message}`)
+        console.log(`editImage: ${err.message}`)
+        formatRes.errMsg = err.errMsg
     }
-    const newFilePath = path.join(process.env.imgStoreFolder, newFileName)
-    await fs.rename(req.file.path, newFilePath)
     res.json(formatRes)
 }
 
@@ -223,7 +233,7 @@ module.exports = {
     getChapterNames,
     getSectionNames,
     getSubjectNames,
-    uploadPictureOfTitle,
+    editImage,
     uploadPictureOfExplan,
     addFavoriteTitle,
     getQuestionDto,
