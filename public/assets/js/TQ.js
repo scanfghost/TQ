@@ -35,7 +35,7 @@ $(document).ready(() => {
     })
 
     $('#uploadPictureOfTitle').on('click', function () {
-        rh.fetchAllTitleImage.call(this)
+        rh.previewAllImage("title")
     })
 
     $('.uploadPictureOfTitle-content form').on('submit', function (e) {
@@ -44,10 +44,7 @@ $(document).ready(() => {
     })
 
     $('#uploadPictureOfExplan').on('click', function () {
-        const title_no = $('#title_no').text().trim().replace(/\.$/, '')
-        const p = $('.uploadPictureOfExplan-content')
-        p.find('form').find('div').first().html(`为第 ${title_no} 题添加解释图片`)
-        activeModalCard('.uploadPictureOfExplan-content')
+        rh.previewAllImage("explanation")
     })
 
     $('.uploadPictureOfExplan-content form').on('submit', function (e) {
@@ -108,10 +105,18 @@ $(document).ready(() => {
     })
 
     $('.uploadPictureOfTitle-content .imageQueue').on('click', '.image-queue-item', function () {
-        rh.selectImageQueueItem.call(this)
+        rh.selectImageQueueItem.call(this, "title")
     });
 
     $('.uploadPictureOfTitle-content .selectSerialType').on('click', function () {
-        rh.selectSerialTypeItem.call(this)
+        rh.selectSerialTypeItem.call(this, "title")
+    });
+
+    $('.uploadPictureOfExplan-content .imageQueue').on('click', '.image-queue-item', function () {
+        rh.selectImageQueueItem.call(this, "explanation")
+    });
+
+    $('.uploadPictureOfExplan-content .selectSerialType').on('click', function () {
+        rh.selectSerialTypeItem.call(this, "explanation")
     });
 })

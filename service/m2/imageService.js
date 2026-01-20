@@ -99,19 +99,20 @@ async function priorInsertImageByQuestionId(questionId, fileName, type, anchorNa
         const anchorSerial = anchorRows[0].serial
 
         sql =
-            `update image set serial = serial + 1 where question_id = ? and serial >= ?`
+            `update image set serial = serial + 1 where question_id = ? and serial >= ? and type = ?`
 
-        const [updateResult] = await pool.query(sql,
+        const [updateResult] = await connection.query(sql,
             [
                 questionId,
-                anchorSerial
+                anchorSerial,
+                type
             ]
         )
 
         sql =
             `insert into image (question_id, name, type, serial) values(?, ?, ?, ?)`
 
-        const [insertResult] = await pool.query(sql,
+        const [insertResult] = await connection.query(sql,
             [
                 questionId,
                 fileName,
@@ -142,7 +143,10 @@ function getUUIDFileName(originalFileName) {
     return uuidv4() + ext
 }
 
-async function getAllTitleImageByQuestionId(questionId) {
+async function getAllTypeImageByQuestionId(questionId, type) {
+    if (!["title", "explanation"].includes(type)) {
+        throw new Error(`${type} must be one of ["title", "explanation"]`)
+    }
     const sql =
         `select * from image where question_id = ? and type = ? order by serial asc`
 
@@ -150,7 +154,7 @@ async function getAllTitleImageByQuestionId(questionId) {
         const [result] = await pool.query(sql,
             [
                 questionId,
-                'title'
+                type
             ]
         )
 
@@ -166,6 +170,7 @@ async function getAllTitleImageByQuestionId(questionId) {
 }
 
 async function removeImageByNames(questionId, nameList) {
+    console.dir(questionId, nameList)
     let connection
     try {
         if (!Array.isArray(nameList)) {
@@ -177,6 +182,7 @@ async function removeImageByNames(questionId, nameList) {
         const placeholders = nameList.map(() => '?').join(', ')
         let sql =
             `delete from image where question_id = ? and name in (${placeholders})`
+            console.dir( [questionId, ...nameList])
         const [deleteRows] = await connection.query(sql, [questionId, ...nameList])
         
         if (deleteRows.affectedRows == 0) {
@@ -206,10 +212,6 @@ async function removeImageByNames(questionId, nameList) {
             ]
         )
 
-        if (updateRows.affectedRows == 0) {
-            throw new Error('update 0 doc')
-        }
-
         await connection.commit()
     } catch (err) {
         await connection.rollback()
@@ -222,7 +224,7 @@ module.exports = {
     appendImageByQuestionId,
     replaceImageByQuestionId,
     priorInsertImageByQuestionId,
-    getAllTitleImageByQuestionId,
+    getAllTypeImageByQuestionId,
     getUUIDFileName,
     removeImageByNames
 }

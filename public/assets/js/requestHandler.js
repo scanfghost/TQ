@@ -203,6 +203,12 @@ function editImage(type, formContext) {
     if (!["title", "explanation"].includes(type)) {
         throw new Error(`${type} must be one of ["title", "explanation"]`)
     }
+    let containerClass 
+    if (type == 'title') {
+        containerClass = '.uploadPictureOfTitle-content'
+    } else {
+        containerClass = '.uploadPictureOfExplan-content'
+    }
     let [_id, _] = get_idNo()
 
     const formData = new FormData(formContext)
@@ -211,8 +217,8 @@ function editImage(type, formContext) {
 
     const serialType = formData.get('serialType')
 
-    const $selected = $('.uploadPictureOfTitle-content .imageQueue .image-queue-item.selected')
-    if ($selected.length == 0) {
+    const $selected = $(`${containerClass} .imageQueue .image-queue-item.selected`)
+    if (serialType != 'append' && $selected.length == 0) {
         toggleResponseTip(`点击指定${serialType == 'replace' ? '替换' : serialType == 'priorInsert' ? '前插' : '删除'}的图片`, 4000)
         return
     }
@@ -406,19 +412,28 @@ function submitTitle() {
         })
 }
 
-function fetchAllTitleImage() {
+function previewAllImage(type) {
+    if (!["title", "explanation"].includes(type)) {
+        throw new Error(`${type} must be one of ["title", "explanation"]`)
+    }
     const [qid, _] = get_idNo()
-    const p = $('.uploadPictureOfTitle-content')
+    let containerClass 
+    if (type == 'title') {
+        containerClass = '.uploadPictureOfTitle-content'
+    } else {
+        containerClass = '.uploadPictureOfExplan-content'
+    }
+    const p = $(containerClass)
     const $imageQueue = p.find('.imageQueue').first()
     const $radioContainer = p.find('.selectSerialType')
     $radioContainer.find('input[value="append"]').prop('checked', false);
     $radioContainer.find('input[value="replace"]').prop('checked', false);
     $radioContainer.find('input[value="priorInsert"]').prop('checked', false);
     $imageQueue.empty()
-    rs.fetchAllTitleImage(qid)
+    rs.fetchAllTypeImage(qid, type)
         .done(res => {
             const title_no = $('#title_no').text().trim().replace(/\.$/, '')
-            p.find('form').find('div').first().html(`为第 ${title_no} 题添加题干图片`)
+            p.find('form').find('div').first().html(`第 ${title_no} 题编辑图片`)
             if (res.data.imageDtoList && res.data.imageDtoList.length > 0) {
                 const sortedImages = [...res.data.imageDtoList].sort((a, b) => a.serial - b.serial)
                 sortedImages.forEach(img => {
@@ -431,11 +446,12 @@ function fetchAllTitleImage() {
                     $imageQueue.append($img)
                 })
             } else {
+                $radioContainer.find('input[value="remove"]').prop('disabled', true);
                 $radioContainer.find('input[value="replace"]').prop('disabled', true);
                 $radioContainer.find('input[value="priorInsert"]').prop('disabled', true);
                 $imageQueue.append($('<div>')).text('暂无图片')
             }
-            activeModalCard('.uploadPictureOfTitle-content')
+            activeModalCard(containerClass)
         })
         .fail((xhr, status, err) => {
             const formatRes = JSON.parse(xhr.responseText)
@@ -443,8 +459,14 @@ function fetchAllTitleImage() {
         })
 }
 
-function selectImageQueueItem() {
-    const $p = $('.uploadPictureOfTitle-content')
+function selectImageQueueItem(type) {
+    let containerClass 
+    if (type == 'title') {
+        containerClass = '.uploadPictureOfTitle-content'
+    } else {
+        containerClass = '.uploadPictureOfExplan-content'
+    }
+    const $p = $(containerClass)
     const serialType = $p.find('input[name="serialType"]:checked').val()
     
     if ($(this).hasClass('selected')) {
@@ -457,10 +479,15 @@ function selectImageQueueItem() {
     }
 }
 
-function selectSerialTypeItem() {
+function selectSerialTypeItem(type) {
+    let containerClass 
+    if (type == 'title') {
+        containerClass = '.uploadPictureOfTitle-content'
+    } else {
+        containerClass = '.uploadPictureOfExplan-content'
+    }
+    const $p = $(containerClass)
     const serialType = $(this).find('input[name="serialType"]:checked').val()
-    $(this).find('input[name="submit"]').prop('disabled', false)
-    const $p = $('.uploadPictureOfTitle-content')
     $p.find('input[name="picture"]').prop('disabled', true)
     $p.find('input[name="submit"]').prop('disabled', true).val('确认')
     switch (serialType) {
@@ -499,7 +526,7 @@ export default {
     addFavoriteTitle,
     editTitle,
     submitTitle,
-    fetchAllTitleImage,
+    previewAllImage,
     selectImageQueueItem,
     selectSerialTypeItem
 }

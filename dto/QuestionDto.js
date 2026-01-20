@@ -50,12 +50,22 @@ class QuestionDto {
 
     insertTitleImages(titleImgs){
         if (titleImgs == undefined) {
-            throw new Error(`cannot insert undefined image into questionDto`)
+            throw new Error(`cannot insert undefined title image into questionDto`)
         }
         if (!Array.isArray(titleImgs)) {
             throw new Error(`${titleImgs} is not Array`)
         }
         this.titleImgs = titleImgs
+    }
+
+    insertExplanImages(explanImgs){
+        if (explanImgs == undefined) {
+            throw new Error(`cannot insert undefined explan image into questionDto`)
+        }
+        if (!Array.isArray(explanImgs)) {
+            throw new Error(`${explanImgs} is not Array`)
+        }
+        this.explanImgs = explanImgs
     }
 
     processChoiceData(basicChoice) {

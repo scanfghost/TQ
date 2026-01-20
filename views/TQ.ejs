@@ -74,8 +74,8 @@
             <div class="action actions-item" id="selectSubject">选择科目与章节</div>
             <div class="action actions-item" id="saveAnswer">提交作答版本</div>
             <% if(user && user.role=='admin' ) { %>
-                <div class="action actions-item" id="uploadPictureOfTitle">添加题干图片</div>
-                <div class="action actions-item" id="uploadPictureOfExplan">添加解释图片</div>
+                <div class="action actions-item" id="uploadPictureOfTitle">设置题干图片</div>
+                <div class="action actions-item" id="uploadPictureOfExplan">设置解释图片</div>
                 <div class="action actions-item" id="editTitle">编辑题目</div>
                 <% } %>
                     <div class="action actions-item" id="addFavoriteTitle">加入收藏</div>
@@ -110,8 +110,17 @@
     <div class="uploadPictureOfExplan-content modalCard">
         <form>
             <div></div>
-            <input type="file" name="picture" id="inputPictureOfExplan" required>
-            <input type="submit" value="上传">
+            <div class="selectSerialType">
+                <label><input type="radio" name="serialType" value="append" required> <span>末尾追加</span></label>
+                <label><input type="radio" name="serialType" value="replace" required> <span>替换</span></label>
+                <label><input type="radio" name="serialType" value="priorInsert" required> <span>前插</span></label>
+                <label><input type="radio" name="serialType" value="remove" required> <span>删除(可多选)</span></label>
+            </div>
+            <div class="imageQueue">
+                    
+            </div>
+            <input type="file" name="picture" id="inputPictureOfTitle" required disabled>
+            <input type="submit" name="submit" value="确认" disabled>
         </form>
     </div>
 

@@ -19,7 +19,7 @@ router.get('/chapterNames', titleController.getChapterNames)
 
 router.get('/sectionNames', titleController.getSectionNames)
 
-router.get('/fetchAllTitleImage/:id', titleController.getAllTitleImage)
+router.get('/fetchAllTypeImage/:id/:type', titleController.getAllTitleImage)
 
 // router.post('/fetchUserPreference', userSettingController.fetchUserSetting)
 

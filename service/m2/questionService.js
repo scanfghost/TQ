@@ -58,7 +58,8 @@ async function getQuestionById(questionId) {
             throw new Error(`题目不存在`)
         }
 
-        const imageDtoList = await m2ImageService.getAllTitleImageByQuestionId(questionId)
+        const titleImageDtoList = await m2ImageService.getAllTypeImageByQuestionId(questionId, "title")
+        const explanImageDtoList = await m2ImageService.getAllTypeImageByQuestionId(questionId, "explanation")
 
         let questionDto = new QuestionDto(
             result[0].id,
@@ -76,8 +77,12 @@ async function getQuestionById(questionId) {
             result[0].serial
         )
 
-        if (imageDtoList) {
-            questionDto.insertTitleImages(imageDtoList)
+        if (titleImageDtoList) {
+            questionDto.insertTitleImages(titleImageDtoList)
+        }
+
+        if (explanImageDtoList) {
+            questionDto.insertExplanImages(explanImageDtoList)
         }
 
         return questionDto
@@ -137,7 +142,8 @@ async function getQuestionUserAnswerById(questionId, user) {
             throw new Error(`题目不存在`)
         }
 
-        const imageDtoList = await m2ImageService.getAllTitleImageByQuestionId(questionId)
+        const titleImageDtoList = await m2ImageService.getAllTypeImageByQuestionId(questionId, "title")
+        const explanImageDtoList = await m2ImageService.getAllTypeImageByQuestionId(questionId, "explanation")
 
         const questionDto = new QuestionDto(
             result[0].id,
@@ -154,10 +160,15 @@ async function getQuestionUserAnswerById(questionId, user) {
             result[0].section_id,
             result[0].serial
         )
-        
+
         questionDto.insertChoiceUserAnswer(createBasicUserAnswer(result[0].userOption, result[0].isCorrect))
-        if (imageDtoList) {
-            questionDto.insertTitleImages(imageDtoList)
+        
+        if (titleImageDtoList) {
+            questionDto.insertTitleImages(titleImageDtoList)
+        }
+
+        if (explanImageDtoList) {
+            questionDto.insertExplanImages(explanImageDtoList)
         }
         
         return questionDto

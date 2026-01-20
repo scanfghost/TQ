@@ -3,7 +3,9 @@
     <%= questionDto.explantion %>
 </p>
 <div class="explanImg-content">
-  <% if (questionDto.explanImg) { %>
-      <img src="/assets/img/<%= questionDto.explanImg[0] %>" alt="">
-    <% } %>    
+  <% if (questionDto.explanImgs && questionDto.explanImgs.length > 0) { %>
+    <% questionDto.explanImgs.forEach(img => { %>
+      <img src="/assets/img/<%= img.fileName %>" class="explan-img" />
+    <% }); %>
+  <% } %>   
 </div>

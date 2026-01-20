@@ -65,7 +65,7 @@ async function editImage(req, res) {
                     await fs.access(req.file.path)
                 } catch (err) {
                     res.status(400)
-                    formatRes.errMsg = 'uploadPictureOfTitle: req.file.path is empty'
+                    formatRes.errMsg = 'editImage: req.file.path is empty'
                     res.json(formatRes)
                     return
                 }
@@ -216,7 +216,7 @@ async function saveHistoryAnswerByStudyPath(req, res) {
 async function getAllTitleImage(req, res) {
     let formatRes = createFormatRes()
     try {
-        const imageDtoList = await m2ImageService.getAllTitleImageByQuestionId(req.params.id)
+        const imageDtoList = await m2ImageService.getAllTypeImageByQuestionId(req.params.id, req.params.type)
         formatRes.data.imageDtoList = imageDtoList
     } catch (err) {
         console.log(`getAllTitleImage: ${err.message}`)
