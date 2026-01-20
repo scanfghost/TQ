@@ -21,13 +21,13 @@ function createBasicUserAnswer(choice_options, choice_correct) {
 }
 
 class QuestionDto {
-    constructor(id, type, title, basicChoice, explantion, subject_id, chapter_id, section_id, serial) {
+    constructor(id, type, title, basicChoice, explanation, subject_id, chapter_id, section_id, serial) {
         if (!TYPE.includes(type)) {
             throw new Error('constructor of question: type isnt one of "choice" or "fill" or "answer"')
         }
         this.id = id
         this.type = type
-        this.explantion = explantion
+        this.explanation = explanation
         this.subjectId = subject_id 
         this.chapterId = chapter_id
         this.sectionId = section_id

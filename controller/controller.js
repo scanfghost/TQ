@@ -49,19 +49,21 @@ function logoutUser(req, res) {
 async function modifyUserStudyPath(req, res) {
     let formatRes = createFormatRes()
     try {
+        const user = req.session.user
         const subject = req.body.subject
         const chapter = req.body.chapter
         const section = req.body.section
-        const success = await m2UserService.modifyUserStudyPath(req.session.user.id, subject, chapter, section)
-        if (success) {
-            req.session.user.currentSubject = subject
-            req.session.user.currentChapter = chapter
-            req.session.user.currentSection = section
-            await new Promise((resolve, reject) => {
-                req.session.save(err => err ? reject(err) : resolve());
-              });
-        }
-        formatRes.data.success = success
+        const [subjectId, chapterId, sectionId] = await m2UserService.modifyUserStudyPath(user.id, subject, chapter, section)
+        user.subjectId = subjectId
+        user.chapterId = chapterId
+        user.sectionId = sectionId
+        user.currentSubject = subject
+        user.currentChapter = chapter
+        user.currentSection = section
+        await new Promise((resolve, reject) => {
+            req.session.save(err => err ? reject(err) : resolve());
+        });
+        formatRes.data.success = true
         res.json(formatRes)
     } catch (err) {
         formatRes.errMsg = '修改用户科目信息失败: ' + err.message
@@ -69,7 +71,7 @@ async function modifyUserStudyPath(req, res) {
     }
 }
 
-function authCheck(req, res) { 
+function authCheck(req, res) {
     let formatRes = createFormatRes()
     if (req.session.user) {
         formatRes.data.logined = true
@@ -78,9 +80,9 @@ function authCheck(req, res) {
         formatRes.data.logined = false
     }
     res.json(formatRes)
- }
+}
 
- 
+
 
 module.exports = {
     getIndexPage,

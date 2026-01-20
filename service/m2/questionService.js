@@ -70,7 +70,7 @@ async function getQuestionById(questionId) {
                 result[0].shared_options,
                 result[0].individual_options,
                 result[0].right_option),
-            result[0].explantion,
+            result[0].explanation,
             result[0].subject_id,
             result[0].chapter_id,
             result[0].section_id,
@@ -154,7 +154,7 @@ async function getQuestionUserAnswerById(questionId, user) {
                 result[0].shared_options,
                 result[0].individual_options,
                 result[0].right_option),
-            result[0].explantion,
+            result[0].explanation,
             result[0].subject_id,
             result[0].chapter_id,
             result[0].section_id,
@@ -195,18 +195,18 @@ function equalChoice(userOption, rightOption) {
     return true
 }
 
-async function editChoiceQuestion(questionId, newTitle, newExplantion) {
+async function editChoiceQuestion(questionId, newTitle, newexplanation) {
     const sql =
         `update question
     set
         title = ?,
-        explantion = ?
+        explanation = ?
     where id = ?`
     try {
         const [result] = await pool.query(sql,
             [
                 newTitle,
-                newExplantion,
+                newexplanation,
                 questionId
             ]
         )

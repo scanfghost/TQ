@@ -78,8 +78,8 @@ async function modifyUserStudyPath(userId, newSubject, newChapter, newSection) {
         if (result.affectedRows == 0) {
             throw new Error(`modifyUserStudyPath: User with ID ${userId} not found`)
         }
-        console.log(result.affectedRows)
-        return result.affectedRows == 1 ? true : false
+
+        return [subjectId, chapterId, sectionId]
     } catch (err) {
         throw new Error(`modifyUserStudyPath: ${err}`)
     }
