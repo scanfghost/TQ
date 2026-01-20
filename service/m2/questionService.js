@@ -224,11 +224,12 @@ async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectio
         const finishedCount = await getUserAnswerCountByStudyPath(userId, subjectId, chapterId, sectionId)
         const questionCount = await getQuestionCountByStudyPath(subjectId, chapterId, sectionId)
 
+        connection = await pool.getConnection()
+
+        //细节获取连接在抛出异常前，保证回滚正常
         if (finishedCount < questionCount) {
             throw new Error('还有题目未完成')
         }
-        
-        connection = await pool.getConnection()
         
         await connection.beginTransaction()
 
@@ -358,6 +359,31 @@ async function addFavoriteQuestion(userId, questionId, keywords, comment) {
     }
 }
 
+async function removeUserAnswerByStudyPath(userId, subjectId, chapterId, sectionId) {
+    const sql = 
+    `delete ua
+    from useranswer ua
+    inner join question q on  ua.question_id = q.id
+    where q.subject_id = ? and q.chapter_id = ? and q.section_id = ? and ua.user_id = ?`
+
+    try {
+        const [result] = await pool.query(sql,
+            [
+                subjectId,
+                chapterId,
+                sectionId,
+                userId
+            ]
+        )
+
+        return result.affectedRows
+    } catch (err) {
+        console.log(`removeUserAnswerByStudyPath: ${err}`)
+        throw new Error(`${err.message}`)
+    }
+}
+
+
 module.exports = {
     getQuestionCountByStudyPath,
     getQuestionById,
@@ -366,5 +392,6 @@ module.exports = {
     equalChoice,
     editChoiceQuestion,
     saveHistoryAnswerByStudyPath,
-    addFavoriteQuestion
+    addFavoriteQuestion,
+    removeUserAnswerByStudyPath
 }

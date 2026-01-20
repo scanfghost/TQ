@@ -36,8 +36,6 @@ router.post('/modifyUserSetting', userSettingController.modifyUserSetting)
 router.post('/saveHistoryAnswer', titleController.saveHistoryAnswerByStudyPath)
 
 router.post('/editImage', imgUpload.single('picture'), titleController.editImage)
-
-router.post('/uploadPictureOfExplan', imgUpload.single('picture'), titleController.uploadPictureOfExplan)
  
 router.post('/addFavoriteTitle', titleController.addFavoriteTitle)
 
@@ -45,6 +43,6 @@ router.get('/titleDto/:id', titleController.getQuestionDto)
 
 router.post('/editTitle', titleController.editChoiceQuestion)
 
-// router.delete('/restartAnswer', controller.removeUserAnswer)
+router.delete('/restartAnswer', titleController.removeUserAnswerByStudyPath)
 
 module.exports = router

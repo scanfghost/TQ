@@ -38,16 +38,6 @@ function editImage(formData) {
     })
 }
 
-function uploadPictureOfExplan(formData) {
-    return $.ajax({
-        type: 'POST',
-        contentType: false,
-        url: '/uploadPictureOfExplan',
-        data: formData,
-        processData: false
-    })
-}
-
 function modifyUserSetting(instantJudge) {
     return $.ajax({
         type: 'POST',
@@ -135,7 +125,6 @@ export default {
     deleteAnswer,
     saveHistoryAnswer,
     editImage,
-    uploadPictureOfExplan,
     modifyUserSetting,
     modifyUserSubject,
     fetchSubjectForm,

@@ -170,7 +170,6 @@ async function getAllTypeImageByQuestionId(questionId, type) {
 }
 
 async function removeImageByNames(questionId, nameList) {
-    console.dir(questionId, nameList)
     let connection
     try {
         if (!Array.isArray(nameList)) {
@@ -182,7 +181,7 @@ async function removeImageByNames(questionId, nameList) {
         const placeholders = nameList.map(() => '?').join(', ')
         let sql =
             `delete from image where question_id = ? and name in (${placeholders})`
-            console.dir( [questionId, ...nameList])
+
         const [deleteRows] = await connection.query(sql, [questionId, ...nameList])
         
         if (deleteRows.affectedRows == 0) {

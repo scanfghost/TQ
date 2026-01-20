@@ -2,8 +2,6 @@ const path = require('path')
 const ejs = require('ejs')
 const fs = require('fs').promises
 const { createFormatRes } = require('../common/formatRes')
-const titleService = require('../service/titleService')
-const { md5 } = require('../common/md5')
 const m2QuestionService = require('../service/m2/questionService')
 const m2UserSettingService = require('../service/m2/userSettingService')
 const m2UserService = require('../service/m2/userService')
@@ -95,31 +93,6 @@ async function editImage(req, res) {
         console.log(`editImage: ${err.message}`)
         formatRes.errMsg = err.errMsg
     }
-    res.json(formatRes)
-}
-
-async function uploadPictureOfExplan(req, res) {
-    let formatRes = createFormatRes()
-    try {
-        await fs.access(req.file.path)
-    } catch (err) {
-        res.status(400)
-        formatRes.errMsg = 'uploadPictureOfExplan: req.file.path is empty'
-        res.json(formatRes)
-        return
-    }
-    const subjectName = req.session.user.currentSubject
-    const chapterName = req.session.user.currentChapter
-    const sectionName = req.session.user.currentSection
-    const collectionName = await titleService.getSectionRef(subjectName, chapterName, sectionName)
-    const titleDto = await titleService.getTitleById(collectionName, req.body._id)
-    const hashInput = titleDto.title + JSON.stringify(titleDto.options)
-    const ext = path.extname(req.file.filename)
-    const hash = md5(hashInput, 12)
-    const newFilename = `explan${hash}${ext}`
-    const newFilePath = path.join(process.env.imgStoreFolder, newFilename)
-    await fs.rename(req.file.path, newFilePath)
-    titleService.modifyImgOfExplan(collectionName, req.body._id, newFilename)
     res.json(formatRes)
 }
 
@@ -226,6 +199,20 @@ async function getAllTitleImage(req, res) {
     res.json(formatRes)
 }
 
+async function removeUserAnswerByStudyPath(req, res) {
+    let formatRes = createFormatRes()
+    const user = req.session.user
+
+    try {
+        const rows = await m2QuestionService.removeUserAnswerByStudyPath(user.id, user.subjectId, user.chapterId, user.sectionId)
+        formatRes.data.message = `共移除 ${rows} 作答记录`
+    } catch (err) {
+        res.status(400)
+        formatRes.errMsg = err.message
+    }
+    res.json(formatRes)
+}
+
 module.exports = {
     submitChoice,
     getTQPage,
@@ -234,10 +221,10 @@ module.exports = {
     getSectionNames,
     getSubjectNames,
     editImage,
-    uploadPictureOfExplan,
     addFavoriteTitle,
     getQuestionDto,
     editChoiceQuestion,
     saveHistoryAnswerByStudyPath,
-    getAllTitleImage
+    getAllTitleImage,
+    removeUserAnswerByStudyPath
 }

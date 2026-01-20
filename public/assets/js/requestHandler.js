@@ -166,12 +166,18 @@ function fetchTitle() {
 }
 
 function deleteAnswer() {
-    if (!confirm("重新做题不保留记录，是否继续?")) {
+    if (!confirm("重新做题不保留记录，是否先保存历史作答?")) {
         return
     }
+    saveHistoryAnswer()
+
     rs.deleteAnswer()
-        .done(() => {
-            location.reload()
+        .done((res) => {
+            const waitTime = toggleResponseTip(res.data.message, 2500)
+            console.log(waitTime)
+            setTimeout(() => {
+                location.reload()
+            }, waitTime);
         })
         .fail((xhr, status, err) => {
             const errorData = JSON.parse(xhr.responseText)
@@ -183,11 +189,11 @@ function deleteAnswer() {
 function saveHistoryAnswer() {
     rs.saveHistoryAnswer()
         .done((res) => {
-            toggleResponseTip(res.data.message, 4000)
+            toggleResponseTip(res.data.message, 2500)
         })
         .fail((xhr, status, err) => {
             const errorData = JSON.parse(xhr.responseText)
-            toggleResponseTip(errorData.errMsg, 4000)
+            toggleResponseTip(errorData.errMsg, 2500)
         })
 }
 
