@@ -1,40 +1,12 @@
 require('dotenv').config({ silent: true })
-var express = require('express')
+const express = require('express')
 const cors = require('cors')
-var mongoose = require('mongoose')
-var router = require('./route/route')
-var session = require('express-session')
-var MongoStore = require('connect-mongo');
+const router = require('./route/route')
 const authMiddleware = require('./middleware/auth')
+const sessionMiddleware = require('./middleware/session');
 const {createFormatRes} = require('./common/formatRes')
 
-if (process.env.nativeDB == 1) {
-    mongoose.connect(process.env.nativeUrl)
-    .then(() => {
-        console.log('✅ 本地MongoDB 连接成功');
-    })
-    .catch(err => {
-        console.error('❌ MongoDB 连接失败:', err.message);
-    });
-} else {
-    mongoose.connect(process.env.remoteUrl)
-    .then(() => {
-        console.log('✅ 远程MongoDB 连接成功');
-    })
-    .catch(err => {
-        console.error('❌ MongoDB 连接失败:', err.message);
-    });
-}
-
-
-const sessionStore = MongoStore.create({
-    client: mongoose.connection.getClient(),
-    collectionName: 'session',
-    ttl: 60 * 60,
-    autoRemove: 'native'
-});
-
-var app = express()
+let app = express()
 
 app.set('view engine', 'ejs')
 
@@ -48,33 +20,10 @@ const corsOptions = {
   exposedHeaders: ['Content-Length', 'X-Total-Count'],
   credentials: true,              
 }
-
 app.use(cors(corsOptions))
-
 app.use(express.static('./public'))
-
-var SESSION_SECRET = null
-
-if (process.env.dynamicSecret == 1) {
-    SESSION_SECRET = process.env.secret + Date.now()
-} else {
-    SESSION_SECRET = process.env.secret
-}
-
 app.use(express.json())
-
-app.use(session({
-    secret: SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: sessionStore,
-    cookie: {
-        maxAge: 1000 * 60 * 60,
-        httpOnly: true,
-        secure: false
-    },
-    rolling: true
-}))
+app.use(sessionMiddleware);
 app.use(authMiddleware.auth)
 app.use(authMiddleware.adminOnly)
 app.use('/', router)
