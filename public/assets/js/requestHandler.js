@@ -2,9 +2,13 @@ import { activeModalCard, idleModalCard } from './modalCard.js'
 import { toggleResponseTip } from './responseTip.js'
 import rs from './requestService.js'
 
+function getQuestionId() {
+    return $('.title')[0].id.replace(/^question/, '')
+}
+
 function singleChoice() {
     // 单空单选
-    const _id = $('.title')[0].id.replace(/^question/, '')
+    const _id = getQuestionId()
     const relavantLi = $(`#serial${_id}`)
 
     if (relavantLi.hasClass('right') || relavantLi.hasClass('wrong')) {
@@ -45,8 +49,8 @@ function singleMultipleChoice() {
     // 切换选中状态
     $(this).toggleClass('selected')
 
-    const _id = $('.title')[0].id
-    const relavantLi = $(`#No${_id}`)
+    const _id = getQuestionId()
+    const relavantLi = $(`#serial${_id}`)
 
     if (relavantLi.hasClass('answered')) {
         return
@@ -90,8 +94,8 @@ function singleMultipleChoice() {
 function multipleSingleChoice() {
     // 多空单选
 
-    const _id = $('.title')[0].id
-    const relavantLi = $(`#No${_id}`)
+    const _id = getQuestionId()
+    const relavantLi = $(`#serial${_id}`)
 
     if (relavantLi.hasClass('right') || relavantLi.hasClass('wrong')) {
         return
@@ -215,7 +219,7 @@ function editImage(type, formContext) {
     } else {
         containerClass = '.uploadPictureOfExplan-content'
     }
-    let [_id, _] = get_idNo()
+    let _id = getQuestionId()
 
     const formData = new FormData(formContext)
     formData.append('_id', _id)
@@ -248,7 +252,7 @@ function editImage(type, formContext) {
             $selected.each(function (i, e) {
                 formData.append('fileNameList', $(e).attr('src').replace(/^\/assets\/img\//, ''))
             })
-            
+            console.log(formData.get('fileNameList'))
             break
     }
 
@@ -320,8 +324,6 @@ function modifyUserSubject() {
     const chapter = $('#selectForChapter').val()
     const section = $('#selectForSection').val()
 
-    let [_id, title_no] = get_idNo()
-
     rs.modifyUserSubject(subject, chapter, section)
         .done((res) => {
             if (res.data.success == 1) {
@@ -341,7 +343,7 @@ function modifyUserSubject() {
 function modifyUserSetting() {
     const instantJudge = $('#toggleSwitch').prop('checked')
 
-    let [_id, _] = get_idNo()
+    let _id = getQuestionId()
 
     rs.modifyUserSetting(instantJudge)
         .done(() => {
@@ -353,24 +355,13 @@ function modifyUserSetting() {
         })
 }
 
-function get_idNo() {
-    let _id, title_no
-    try {
-        title_no = +($('#title_no').text().trim().replace(/\.$/, ''))
-        _id = $(`.table-content ul li:nth-child(${title_no})`).attr('id').replace('serial', '')
-    } catch (err) {
-        console.log(`get_idNo err: ${err}`)
-    }
-    return [_id, title_no]
-}
-
 function updateTitleInUrl(newid) {
     const newPath = `/TQ/${newid}`
     history.replaceState({}, '', newPath)
 }
 
 function addFavoriteTitle() {
-    const [titleid, _] = get_idNo()
+    const titleid = getQuestionId()
     const comment = $('#inputComment').val().trim()
     const keywords = $('#inputKeywords').val().trim().split(/[,，]/).map(keyword => keyword.trim())
 
@@ -389,19 +380,19 @@ function editTitle() {
     const title_no = $('#title_no').text().trim().replace(/\.$/, '')
     const p = $('.editTitle-content')
     p.find('form').find('div').first().html(`编辑第 ${title_no} 题`)
-    const [_id, _] = get_idNo()
+    const _id = getQuestionId()
     const titleInput = $('#inputTitle')
     const explanInput = $('#inputExplanation')
     rs.fetchTitleDto(_id)
         .done((res) => {
             titleInput.val(res.data.questionDto.title)
-            explanInput.val(res.data.questionDto.explantion)
+            explanInput.val(res.data.questionDto.explanation)
             activeModalCard('.editTitle-content')
         })
 }
 
 function submitTitle() {
-    const [_id, _] = get_idNo()
+    const _id = getQuestionId()
     const title = $('#inputTitle').val().trim()
     const explanation = $('#inputExplanation').val().trim()
     rs.editTitle(_id, title, explanation)
@@ -422,7 +413,7 @@ function previewAllImage(type) {
     if (!["title", "explanation"].includes(type)) {
         throw new Error(`${type} must be one of ["title", "explanation"]`)
     }
-    const [qid, _] = get_idNo()
+    const qid = getQuestionId()
     let containerClass 
     if (type == 'title') {
         containerClass = '.uploadPictureOfTitle-content'
@@ -435,6 +426,7 @@ function previewAllImage(type) {
     $radioContainer.find('input[value="append"]').prop('checked', false);
     $radioContainer.find('input[value="replace"]').prop('checked', false);
     $radioContainer.find('input[value="priorInsert"]').prop('checked', false);
+    $radioContainer.find('input[value="remove"]').prop('checked', false);
     $imageQueue.empty()
     rs.fetchAllTypeImage(qid, type)
         .done(res => {

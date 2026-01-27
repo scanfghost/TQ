@@ -9,7 +9,8 @@ $(document).ready(() => {
 
     $(document).on('click', '.choice ul li', function () {
         const blankType = $('.title').data('blank-type')
-
+        const blankSize = $('.title').data('blank-size')
+        const optionType = $('.choice').data('type')
         if (blankType === 'single') {
             // 单空单选
             rh.singleChoice.call(this)
@@ -18,7 +19,7 @@ $(document).ready(() => {
             rh.singleMultipleChoice.call(this)
         } else if (blankType === 'multiplesingle') {
             // 多空单选
-            rh.multipleSingleChoice.call(this)
+            rh.multipleSingleChoice.call(this, blankSize, optionType)
         }
     })
 

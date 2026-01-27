@@ -82,7 +82,11 @@ async function editImage(req, res) {
                 }
                 const newFilePath = path.join(process.env.imgStoreFolder, newFileName)
                 await fs.rename(req.file.path, newFilePath)
+                break
             case 'remove':
+                if (typeof req.body.fileNameList == 'string') {
+                    req.body.fileNameList = [req.body.fileNameList]
+                }
                 //软删除，文件还在
                 await m2ImageService.removeImageByNames(req.body._id, req.body.fileNameList)
                 break
@@ -91,7 +95,8 @@ async function editImage(req, res) {
         }
     } catch (err) {
         console.log(`editImage: ${err.message}`)
-        formatRes.errMsg = err.errMsg
+        res.status(400)
+        formatRes.errMsg = err.message
     }
     res.json(formatRes)
 }

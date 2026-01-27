@@ -171,11 +171,14 @@ async function getAllTypeImageByQuestionId(questionId, type) {
 
 async function removeImageByNames(questionId, nameList) {
     let connection
+    console.dir('l', nameList)
     try {
+        connection = await pool.getConnection()
+
         if (!Array.isArray(nameList)) {
             throw new Error('nameList is not array')
         }
-        connection = await pool.getConnection()
+        
         await connection.beginTransaction()
 
         const placeholders = nameList.map(() => '?').join(', ')

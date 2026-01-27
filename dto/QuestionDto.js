@@ -28,7 +28,7 @@ class QuestionDto {
         this.id = id
         this.type = type
         this.explanation = explanation
-        this.subjectId = subject_id 
+        this.subjectId = subject_id
         this.chapterId = chapter_id
         this.sectionId = section_id
         this.serial = serial
@@ -40,15 +40,17 @@ class QuestionDto {
         } else if (this.type === 'choice') {
             this.choice = {}
             this.title = title
+
             this.processChoiceData(basicChoice)
+
         }
     }
 
-    insertChoiceUserAnswer(basicUserAnswer){
+    insertChoiceUserAnswer(basicUserAnswer) {
         this.choice.useranswer = basicUserAnswer
     }
 
-    insertTitleImages(titleImgs){
+    insertTitleImages(titleImgs) {
         if (titleImgs == undefined) {
             throw new Error(`cannot insert undefined title image into questionDto`)
         }
@@ -58,7 +60,7 @@ class QuestionDto {
         this.titleImgs = titleImgs
     }
 
-    insertExplanImages(explanImgs){
+    insertExplanImages(explanImgs) {
         if (explanImgs == undefined) {
             throw new Error(`cannot insert undefined explan image into questionDto`)
         }
@@ -69,22 +71,28 @@ class QuestionDto {
     }
 
     processChoiceData(basicChoice) {
-        basicChoice.blankSize = basicChoice.rightOption.length || 0
-        if (basicChoice.blankSize === 1) {
-            if (basicChoice.rightOption[0].length === 1) {
-                basicChoice.blankType = 'single';
-            } else if (thbasicChoiceis.rightOption[0].length > 1) {
-                basicChoice.blankType = 'singlemultiple';
+        try {
+            basicChoice.blankSize = basicChoice.rightOption.length || 0
+            if (basicChoice.blankSize === 1) {
+                if (basicChoice.rightOption[0].length === 1) {
+                    basicChoice.blankType = 'single';
+                } else if (basicChoice.rightOption[0].length > 1) {
+                    basicChoice.blankType = 'singlemultiple';
+                }
+            } else if (basicChoice.blankSize > 1) {
+                basicChoice.blankType = 'multiplesingle';
             }
-        } else if (basicChoice.blankSize > 1) {
-            basicChoice.blankType = 'multiplesingle';
+            if (basicChoice.optionType === 'shared') {
+                basicChoice.options = basicChoice.shared || [];
+            } else if (basicChoice.optionType === 'individual') {
+                basicChoice.options = basicChoice.individual || [];
+            }
+            Object.assign(this.choice, basicChoice)
+        } catch (error) {
+            console.log(`processChoiceData error: ${error}`)
+            throw new Error(`${error.message}`)
         }
-        if (basicChoice.optionType === 'shared') {
-            basicChoice.options = basicChoice.shared || [];
-        } else if (basicChoice.optionType === 'individual'){
-            basicChoice.options = basicChoice.individual || [];
-        }
-        Object.assign(this.choice, basicChoice)
+
     }
 }
 
