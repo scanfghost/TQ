@@ -30,7 +30,7 @@
       %>
       <ul class="<%= vertical ? 'vertical' : '' %>">
         <% for (let i = 0; i < count; i++) { %>
-          <li id="choice<%= i %>" class="<%= userOption.length != 0 && userOption.includes(i) ? 'selected' : '' %>">
+          <li id="choice<%= i %>" class="<%= userOption.length != 0 && userOption[0].includes(i) ? 'selected' : '' %>">
             <%= letters[i] %>. <%= shared[i] %>
           </li>
         <% } %>
