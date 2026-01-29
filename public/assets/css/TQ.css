@@ -83,7 +83,7 @@ body {
   border-left: 3px solid var(--note-fence-color);
   background-color: var(--note-backgroud-color);
 }
-
+/* explanation content */
 .explanation-content {
   padding: 0 20px;
 }
@@ -91,6 +91,10 @@ body {
 .explanation-content .detail {
   text-indent: 2em;
   line-height: 2;
+}
+
+.right-option{
+  text-indent: 2em;
 }
 
 .choice {

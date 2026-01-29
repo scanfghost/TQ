@@ -1,3 +1,23 @@
+<% if(questionDto.type == 'choice') {%>
+  <p>[ 答案 ]</p>
+  <div class="right-option">
+    <% if(questionDto.choice.blankType == "single"){%>
+      <% if(questionDto.choice.rightOption == 0){%>
+          A
+        <%}else if(questionDto.choice.rightOption == 1){%>
+          B
+        <%}else if(questionDto.choice.rightOption == 2){%>
+          C
+        <%}else if(questionDto.choice.rightOption == 3){%>
+          D
+        <% }%>
+        <% }else if(questionDto.choice.blankType == "singlemultiple"){%>
+        singlemultiple
+        <% }else if(questionDto.choice.blankType == "multiplesingle"){%>
+        multiplesingle
+        <% }%>
+  </div>
+<% } %>
 <p>[ 解析 ]</p>
 <p class="detail">
     <%= questionDto.explanation %>
@@ -9,3 +29,9 @@
     <% }); %>
   <% } %>   
 </div>
+<script>
+  MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+  };
+</script>
+<script src="/assets/js/tex-mml-chtml.js"></script>

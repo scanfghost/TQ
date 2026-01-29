@@ -88,6 +88,7 @@ class QuestionDto {
                 basicChoice.options = basicChoice.individual || [];
             }
             Object.assign(this.choice, basicChoice)
+            console.dir(this.choice)
         } catch (error) {
             console.log(`processChoiceData error: ${error}`)
             throw new Error(`${error.message}`)
