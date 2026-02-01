@@ -100,7 +100,8 @@ async function getIdSerialUserAnswerByStudyPath(user) {
         useranswer.choice_correct as isCorrect
     from question 
     left join useranswer on question.id = useranswer.question_id
-    where subject_id = ? and chapter_id = ? and section_id = ?`
+    where subject_id = ? and chapter_id = ? and section_id = ?
+    order by question.serial asc`
     try {
         const [result] = await pool.query(sql,
             [
