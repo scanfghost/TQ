@@ -1,0 +1,37 @@
+<template>
+  <router-view />
+  <Login />
+</template>
+
+<script>
+import Login from './components/Auth/Login.vue'
+
+export default {
+  components: {
+    Login
+  }
+}
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+</style>

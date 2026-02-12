@@ -13,6 +13,10 @@ const templateDir = path.join(__dirname, '../views')
 
 async function getTQPage(req, res) {
     const resultList = await m2QuestionService.getIdSerialUserAnswerByStudyPath(req.session.user)
+    if (resultList.length == 0) {
+        res.render('404', {})
+        return
+    }
     const userSetting = await m2UserSettingService.getUserSetting(req.session.user.id)
     let questionDto, rawIdSerial
     if (req.params.id) {

@@ -3,7 +3,7 @@
 
 # 依赖
 node_modules/
-
+vue\node_modules\
 upload/
 
 public/assets/img/
