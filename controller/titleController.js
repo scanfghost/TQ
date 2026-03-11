@@ -1,5 +1,4 @@
 const path = require('path')
-const ejs = require('ejs')
 const fs = require('fs').promises
 const { createFormatRes } = require('../common/formatRes')
 const m2QuestionService = require('../service/m2/questionService')
@@ -7,38 +6,40 @@ const m2UserSettingService = require('../service/m2/userSettingService')
 const m2UserService = require('../service/m2/userService')
 const m2StudyPathService = require('../service/m2/studyPathService')
 const m2ImageService = require('../service/m2/imageService')
-const { createBasicUserAnswer } = require('../dto/QuestionDto')
-
-const templateDir = path.join(__dirname, '../views')
 
 async function getTQPage(req, res) {
+    const user = req.session.user
+    const userSetting = await m2UserSettingService.getUserSetting(user.id)
+    const questionCount = await m2QuestionService.getQuestionCountByStudyPath(user.subjectId, user.chapterId, user.sectionId)
+    res.json({
+        data: {
+            userSetting,
+            user: req.session.user,
+            questionCount
+        }
+    })
+}
+
+async function getTQTable(req, res) {
     const resultList = await m2QuestionService.getIdSerialUserAnswerByStudyPath(req.session.user)
     if (resultList.length == 0) {
-        res.render('404', {})
+        res.status(404).json({ errMsg: 'No questions found' })
         return
     }
     const userSetting = await m2UserSettingService.getUserSetting(req.session.user.id)
-    let questionDto, rawIdSerial
-    if (req.params.id) {
-        rawIdSerial = resultList.find(item => item.id == req.params.id)
-        questionDto = await m2QuestionService.getQuestionById(req.params.id)
-        questionDto.insertChoiceUserAnswer(createBasicUserAnswer(rawIdSerial.userOption, rawIdSerial.isCorrect))
-    } else {
-        rawIdSerial = resultList.find(item => item.serial == 1)
-        questionDto = await m2QuestionService.getQuestionById(rawIdSerial.id)
-        questionDto.insertChoiceUserAnswer(createBasicUserAnswer(rawIdSerial.userOption, rawIdSerial.isCorrect))
-    }
-    res.render('TQ', { questionDto, pageList: resultList, userSetting, user: req.session.user })
+    res.json({
+        data: {
+            pageList: resultList,
+            instantJudge: userSetting.instantJudge
+        }
+    })
 }
 
 async function getQuestion(req, res) {
     let formatRes = createFormatRes()
     try {
         const questionDto = await m2QuestionService.getQuestionUserAnswerById(req.params.id, req.session.user)
-        formatRes.html.titleChoiceContent = await ejs.renderFile(templateDir + '/partials/titleChoiceContent.ejs', { questionDto })
-        if (questionDto[questionDto.type].useranswer.userOption) {
-            formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { questionDto })
-        }
+        formatRes.data.questionDto = questionDto
     } catch (err) {
         console.log(`getQuestion: ${err}`)
         res.status(403)
@@ -58,6 +59,7 @@ async function getQuestionDto(req, res) {
 
 async function editImage(req, res) {
     let formatRes = createFormatRes()
+    console.log(req.body)
     try {
         switch (req.body.serialType) {
             case 'append':
@@ -109,7 +111,7 @@ async function getSubjectNames(req, res) {
     let formatRes = createFormatRes()
     const result = await m2StudyPathService.getAllSubject()
     const subjectNames = result.map(item => item.name)
-    formatRes.html.switchSubjectContent = await ejs.renderFile(templateDir + '/partials/switchSubjectContent.ejs', { subjectNames })
+    formatRes.data.subjectNames = subjectNames
     res.json(formatRes)
 }
 
@@ -133,21 +135,18 @@ async function submitChoice(req, res) {
     let formatRes = createFormatRes()
     const user = req.session.user
     try {
-        const questionDto = await m2QuestionService.getQuestionById(req.body._id)
+        const questionDto = await m2QuestionService.getQuestionUserAnswerById(req.body._id, user)
         const isCorrect = m2QuestionService.equalChoice(req.body.userOption, questionDto['choice'].rightOption)
         await m2UserService.saveUserChoice(user.id, req.body._id, req.body.userOption, isCorrect)
         const userSetting = await m2UserSettingService.getUserSetting(user.id)
         if (userSetting.instantJudge) {
-            formatRes.html.explanationContent = await ejs.renderFile(templateDir + '/partials/explanationContent.ejs', { questionDto })
-            if (isCorrect) {
-                formatRes.data.answer = "right"
-            } else {
-                formatRes.data.answer = "wrong"
-            }
+            formatRes.data.answer = isCorrect ? "right" : "wrong"
+            formatRes.data.questionDto = questionDto
         } else {
             formatRes.data.answer = "answered"
         }
     } catch (err) {
+        console.log(err)
         res.status(400)
         formatRes.errMsg = 'submitChoice: ' + err
         res.json(formatRes)
@@ -222,9 +221,52 @@ async function removeUserAnswerByStudyPath(req, res) {
     res.json(formatRes)
 }
 
+async function getProcessSerialByStudyPath (req, res){
+    const user = req.session.user
+    let formatRes = createFormatRes()
+
+    try {
+        const result = await m2QuestionService.getProcessSerialByStudyPath(user.id, user.subjectId, user.chapterId, user.sectionId)
+        formatRes.data.serial = result
+    } catch (err) {
+        res.status(404)
+        formatRes.errMsg = err.message
+    }
+    res.json(formatRes)
+}
+
+async function updateProcessSerialByStudyPath (req, res){
+    const user = req.session.user
+    let formatRes = createFormatRes()
+
+    try {
+        const result = await m2QuestionService.updateProcessSerialByStudyPath(user.id, user.subjectId, user.chapterId, user.sectionId, req.body.serial)
+    } catch (err) {
+        res.status(500)
+        formatRes.errMsg = err.message
+    }
+    res.json(formatRes)
+}
+
+async function getQuestionIdBySerialAndPath(req, res) {
+    let formatRes = createFormatRes()
+    const user = req.session.user
+    const {serial} = req.query
+    try {
+        const currentQuestionId = await m2QuestionService.getQuestionIdBySerialAndPath(user.subjectId, user.chapterId, user.sectionId, serial)
+        formatRes.data.currentQuestionId = currentQuestionId
+    } catch (err) {
+        res.status(500)
+        console.dir(err)
+        formatRes.errMsg = err.message
+    }
+    res.json(formatRes)
+}
+
 module.exports = {
     submitChoice,
     getTQPage,
+    getTQTable,
     getQuestion,
     getChapterNames,
     getSectionNames,
@@ -235,5 +277,8 @@ module.exports = {
     editChoiceQuestion,
     saveHistoryAnswerByStudyPath,
     getAllTitleImage,
-    removeUserAnswerByStudyPath
+    removeUserAnswerByStudyPath,
+    getProcessSerialByStudyPath,
+    updateProcessSerialByStudyPath,
+    getQuestionIdBySerialAndPath
 }

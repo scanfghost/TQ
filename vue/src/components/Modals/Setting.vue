@@ -1,48 +1,40 @@
 <template>
-  <div v-if="visible" class="setting-content modalCard">
+  <div v-if="visible" class="setting-wrapper">
     <div class="shadow-cover" @click="close"></div>
-    <div class="modal-content">
-      <h3>偏好设置</h3>
-      <div class="form-group">
-        <label class="switch">
-          <input type="checkbox" v-model="settings.instantJudge">
-          <span class="slider round"></span>
-          即时评判
-        </label>
-      </div>
-      <div class="form-group">
-        <label>题目数量</label>
-        <input type="number" v-model="settings.questionCount" min="1" max="100">
-      </div>
-      <div class="form-group">
-        <label>答题模式</label>
-        <select v-model="settings.answerMode">
-          <option value="single">单选题</option>
-          <option value="multiple">多选题</option>
-          <option value="mixed">混合模式</option>
-        </select>
-      </div>
-      <div class="actions">
-        <button class="cancel-btn" @click="close">取消</button>
-        <button class="confirm-btn" @click="saveSettings">保存设置</button>
+    <div class="modalCard">
+      <div class="modal-content">
+        <h3>偏好设置</h3>
+        <div class="form-group switch-wrapper">
+          <label class="switch">
+            <input type="checkbox" v-model="localSettings.instantJudge">
+            <span class="slider round"></span>
+          </label>
+          <span class="switch-label">即时评判</span>
+        </div>
+        <div class="actions">
+          <button class="cancel-btn" @click="close">取消</button>
+          <button class="confirm-btn" @click="saveSettings">保存设置</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, defineExpose } from 'vue'
 import api from '../../utils/api.js'
 
 export default {
   name: 'Setting',
-  setup() {
+  setup(props, { expose, emit }) {
     const visible = ref(false)
     const settings = ref({
-      instantJudge: true,
-      questionCount: 10,
-      answerMode: 'single'
+      instantJudge: true
     })
+    const localSettings = ref({
+      instantJudge: true
+    })
+    expose({ settings })
 
     const open = () => {
       visible.value = true
@@ -54,10 +46,13 @@ export default {
     }
 
     const loadSettings = async () => {
+      console.log('loadSettings')
       try {
         const response = await api.getUserSetting()
-        if (response.data.data) {
-          settings.value = { ...settings.value, ...response.data.data }
+        if (response.data.data&&response.data.data.settings) {
+          settings.value = response.data.data.settings
+          localSettings.value =  JSON.parse(JSON.stringify(settings.value))
+          emit('update:settings', settings.value)
         }
       } catch (error) {
         console.error('加载设置失败:', error)
@@ -65,9 +60,12 @@ export default {
     }
 
     const saveSettings = async () => {
+      console.log('saveSettings')
       try {
-        const response = await api.updateUserSetting(settings.value)
-        if (response.data.data) {
+        const response = await api.updateUserSetting(localSettings.value)
+        if (response.data.data.success) {
+          settings.value = JSON.parse(JSON.stringify(localSettings.value))
+          emit('update:settings', settings.value)
           // 触发保存成功提示
           const event = new CustomEvent('show-response-tip', {
             detail: {
@@ -91,7 +89,9 @@ export default {
       }
     }
 
-    onMounted(() => {
+    onMounted( async () => {
+      console.log('onMounted')
+      await loadSettings()
       window.addEventListener('open-setting', open)
     })
 
@@ -102,6 +102,7 @@ export default {
     return {
       visible,
       settings,
+      localSettings,
       close,
       saveSettings
     }
@@ -110,6 +111,15 @@ export default {
 </script>
 
 <style scoped>
+.setting-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
 .modalCard {
   position: fixed;
   top: 50%;
@@ -164,11 +174,22 @@ export default {
 }
 
 /* 开关样式 */
+.switch-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .switch {
   position: relative;
   display: inline-block;
   width: 60px;
   height: 34px;
+}
+
+.switch-label {
+  font-size: 1rem;
+  color: #333;
 }
 
 .switch input {

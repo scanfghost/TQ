@@ -1,6 +1,6 @@
 <template>
   <div class="header theme-header">
-    <img src="../../assets/vue.svg">
+    <img src="../../assets/favicon.ico">
     <button v-if="userEmail" class="loginButton" id="TQ">
       {{ userEmail }}
     </button>
@@ -11,15 +11,45 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import api from '../../utils/api.js'
 
 export default {
   name: 'Header',
   setup() {
     const userEmail = ref('')
+    let checkAuthInterval = null
+
+    const checkAuth = async () => {
+      console.log('checkAuth')
+      try {
+        const response = await api.get('/authCheck')
+        console.log(response.data.data)
+        if (!response.data.data?.logined) {
+          // session已过期，清除sessionStorage
+          sessionStorage.removeItem('userEmail')
+          userEmail.value = ''
+        }
+      } catch (error) {
+        console.error('认证检查失败:', error)
+        // 发生错误，清除sessionStorage
+        sessionStorage.removeItem('userEmail')
+        userEmail.value = ''
+      }
+    }
 
     onMounted(() => {
       userEmail.value = sessionStorage.getItem('userEmail') || ''
+      // 每30秒检查一次session状态
+      checkAuthInterval = setInterval(checkAuth, 30000)
+      checkAuth()
+    })
+
+    onUnmounted(() => {
+      // 清除定时器
+      if (checkAuthInterval) {
+        clearInterval(checkAuthInterval)
+      }
     })
 
     const showLogin = () => {

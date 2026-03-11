@@ -4,7 +4,9 @@ const { UserSettingDto } = require('../../dto/UserSettingDto')
 async function getUserSetting(userId) {
     const sql = 'select * from usersetting where user_id = ?'
     try {
-        const [result] = await pool.query(sql, userId)
+        const [result] = await pool.query(sql, [
+            userId
+        ])
         if (result.length == 0) {
             throw new Error(`getUserSetting: no result`)
         }

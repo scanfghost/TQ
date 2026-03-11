@@ -1,57 +1,42 @@
 <template>
-  <div v-if="visible" class="editTitle-content modalCard">
+  <div v-if="visible" class="editTitle-wrapper">
     <div class="shadow-cover" @click="close"></div>
-    <div class="modal-content">
-      <h3>编辑题目</h3>
-      <form @submit.prevent="saveEdit">
-        <div class="form-group">
-          <label>题目内容</label>
-          <textarea v-model="title" placeholder="输入题目内容"></textarea>
-        </div>
-        <div class="form-group">
-          <label>题目解释</label>
-          <textarea v-model="explanation" placeholder="输入题目解释"></textarea>
-        </div>
-        <div class="form-group">
-          <label>选项</label>
-          <div v-for="(option, index) in options" :key="index" class="option-input">
-            <input type="text" v-model="options[index]" placeholder="选项 {{ String.fromCharCode(65 + index) }}">
-            <button type="button" class="remove-option" @click="removeOption(index)" v-if="options.length > 2">-</button>
+    <div class="modalCard">
+      <div class="modal-content">
+        <h3>编辑题目</h3>
+        <form @submit.prevent="saveEdit">
+          <div class="form-group">
+            <label>题目内容</label>
+            <textarea v-model="title" placeholder="输入题目内容"></textarea>
           </div>
-          <button type="button" class="add-option" @click="addOption">+ 添加选项</button>
-        </div>
-        <div class="form-group">
-          <label>正确答案</label>
-          <select v-model="correctAnswer">
-            <option v-for="(option, index) in options" :key="index" :value="index">
-              {{ String.fromCharCode(65 + index) }}
-            </option>
-          </select>
-        </div>
-        <div class="actions">
-          <button type="button" class="cancel-btn" @click="close">取消</button>
-          <button type="submit" class="confirm-btn">保存编辑</button>
-        </div>
-      </form>
+          <div class="form-group">
+            <label>题目解释</label>
+            <textarea v-model="explanation" placeholder="输入题目解释"></textarea>
+          </div>
+          <div class="actions">
+            <button type="button" class="cancel-btn" @click="close">取消</button>
+            <button type="submit" class="confirm-btn">保存编辑</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import { ref, onMounted, onUnmounted } from 'vue'
+import api from '../../utils/api.js'
 
 export default {
   name: 'EditTitle',
   setup() {
     const visible = ref(false)
+    const questionId = ref('')
     const title = ref('')
     const explanation = ref('')
-    const options = ref(['选项A', '选项B', '选项C', '选项D'])
-    const correctAnswer = ref(0)
 
     const open = () => {
       visible.value = true
-      // 这里可以加载当前题目的数据
       loadTitleData()
     }
 
@@ -59,44 +44,43 @@ export default {
       visible.value = false
     }
 
-    const loadTitleData = () => {
-      // 假设加载当前题目的数据
-      title.value = '这是一道测试题目'
-      explanation.value = '这是题目的详细解释'
-      options.value = ['选项A', '选项B', '选项C', '选项D']
-      correctAnswer.value = 0
-    }
-
-    const addOption = () => {
-      options.value.push('新选项')
-    }
-
-    const removeOption = (index) => {
-      if (options.value.length > 2) {
-        options.value.splice(index, 1)
-        if (correctAnswer.value >= options.value.length) {
-          correctAnswer.value = options.value.length - 1
+    const loadTitleData = async () => {
+      try {
+        const response = await api.fetchProcessSerial()
+        if (response.data.data && response.data.data.serial) {
+          const qidResponse = await api.fetchQidBySerial(response.data.data.serial)
+          if (qidResponse.data.data && qidResponse.data.data.currentQuestionId) {
+            questionId.value = qidResponse.data.data.currentQuestionId
+            const titleResponse = await api.fetchTitle(questionId.value)
+            if (titleResponse.data.data.questionDto) {
+              const questionDto = titleResponse.data.data.questionDto
+              title.value = questionDto.title
+              explanation.value = questionDto.explanation
+            }
+          }
         }
+      } catch (error) {
       }
     }
 
-    const saveEdit = () => {
-      // 保存编辑
-      console.log('保存编辑:', {
-        title: title.value,
-        explanation: explanation.value,
-        options: options.value,
-        correctAnswer: correctAnswer.value
-      })
-      // 触发保存成功提示
-      const event = new CustomEvent('show-response-tip', {
-        detail: {
-          message: '题目编辑保存成功',
-          duration: 2000
-        }
-      })
-      window.dispatchEvent(event)
-      close()
+    const saveEdit = async () => {
+      try {
+        await api.editTitle(questionId.value, title.value, explanation.value)
+        const event = new CustomEvent('show-response-tip', {
+          detail: {
+            message: '题目编辑保存成功',
+            duration: 2000
+          }
+        })
+        window.dispatchEvent(event)
+        
+        // 触发题目刷新事件
+        const refreshEvent = new CustomEvent('question-refresh')
+        window.dispatchEvent(refreshEvent)
+        
+        close()
+      } catch (error) {
+      }
     }
 
     onMounted(() => {
@@ -111,11 +95,7 @@ export default {
       visible,
       title,
       explanation,
-      options,
-      correctAnswer,
       close,
-      addOption,
-      removeOption,
       saveEdit
     }
   }
@@ -123,6 +103,15 @@ export default {
 </script>
 
 <style scoped>
+.editTitle-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
 .modalCard {
   position: fixed;
   top: 50%;
@@ -182,39 +171,6 @@ export default {
 .form-group textarea {
   height: 100px;
   resize: vertical;
-}
-
-.option-input {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.option-input input {
-  flex: 1;
-  margin-right: 0.5rem;
-}
-
-.remove-option,
-.add-option {
-  padding: 0.4rem 0.8rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease;
-}
-
-.remove-option {
-  background-color: #f44336;
-  color: white;
-  width: 30px;
-}
-
-.add-option {
-  background-color: #4CAF50;
-  color: white;
-  margin-top: 0.5rem;
 }
 
 .actions {

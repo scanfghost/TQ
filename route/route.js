@@ -7,11 +7,13 @@ const {imgUpload} = require('../middleware/upload')
 
 router.get('/authCheck',controller.authCheck)
 
-router.get('/TQ{/:id}', titleController.getTQPage)
+router.get('/TQ', titleController.getTQPage)
+router.get('/TQ/table', titleController.getTQTable)
 
 router.get('/', controller.getIndexPage)
 
-router.get('/title{/:id}', titleController.getQuestion)
+router.get('/title', titleController.getQuestion)
+router.get('/title/:id', titleController.getQuestion)
 
 router.get('/subjectForm', titleController.getSubjectNames)
 
@@ -21,7 +23,13 @@ router.get('/sectionNames', titleController.getSectionNames)
 
 router.get('/fetchAllTypeImage/:id/:type', titleController.getAllTitleImage)
 
-// router.post('/fetchUserPreference', userSettingController.fetchUserSetting)
+router.get('/fetchQid', titleController.getQuestionIdBySerialAndPath)
+
+router.get('/processSerial', titleController.getProcessSerialByStudyPath)
+
+router.post('/updateProcessSerial', titleController.updateProcessSerialByStudyPath)
+
+router.get('/fetchUserSettings', userSettingController.fetchUserSetting)
 
 router.post('/modifyUserSubject', controller.modifyUserStudyPath)
 

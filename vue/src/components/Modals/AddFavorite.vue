@@ -1,23 +1,25 @@
 <template>
-  <div v-if="visible" class="addFavoriteTitle-content modalCard">
+  <div v-if="visible" class="addFavorite-wrapper">
     <div class="shadow-cover" @click="close"></div>
-    <div class="modal-content">
-      <h3>加入收藏</h3>
-      <form @submit.prevent="addFavorite">
-        <div class="form-group">
-          <label>收藏关键词</label>
-          <input type="text" v-model="keywords" placeholder="添加收藏关键词(多个关键词请用逗号分隔)" required>
-        </div>
-        <div class="form-group">
-          <label>收藏备注</label>
-          <textarea v-model="comment" placeholder="添加收藏备注(可选)"></textarea>
-        </div>
-        <small>提示：关键词和备注用于搜索收藏的题目</small>
-        <div class="actions">
-          <button type="button" class="cancel-btn" @click="close">取消</button>
-          <button type="submit" class="confirm-btn">加入收藏</button>
-        </div>
-      </form>
+    <div class="modalCard">
+      <div class="modal-content">
+        <h3>加入收藏</h3>
+        <form @submit.prevent="addFavorite">
+          <div class="form-group">
+            <label>收藏关键词</label>
+            <input type="text" v-model="keywords" placeholder="添加收藏关键词(多个关键词请用逗号分隔)" required>
+          </div>
+          <div class="form-group">
+            <label>收藏备注</label>
+            <textarea v-model="comment" placeholder="添加收藏备注(可选)"></textarea>
+          </div>
+          <small>提示：关键词和备注用于搜索收藏的题目</small>
+          <div class="actions">
+            <button type="button" class="cancel-btn" @click="close">取消</button>
+            <button type="submit" class="confirm-btn">加入收藏</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -97,6 +99,15 @@ export default {
 </script>
 
 <style scoped>
+.addFavorite-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
 .modalCard {
   position: fixed;
   top: 50%;

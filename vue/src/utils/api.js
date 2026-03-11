@@ -5,12 +5,36 @@ const api = axios.create({
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true
 })
+
+// 请求拦截器
+api.interceptors.request.use(
+  config => {
+    return config
+  },
+  error => {
+    return Promise.reject(error)
+  }
+)
 
 // 响应拦截器
 api.interceptors.response.use(
-  response => response,
+  response => {
+    // 统一处理响应格式
+    if (response.data.errMsg) {
+      // 触发错误提示
+      const event = new CustomEvent('show-response-tip', {
+        detail: {
+          message: response.data.errMsg,
+          duration: 4000
+        }
+      })
+      window.dispatchEvent(event)
+    }
+    return response
+  },
   error => {
     const errorMsg = error.response?.data?.errMsg || error.message
     console.error('API错误:', errorMsg)
@@ -34,28 +58,33 @@ api.login = (userEmail, userPasswd) => {
 }
 
 // 获取题目列表
-api.getQuestions = () => {
-  return api.get('/api/questions')
+api.getQuestions = async () => {
+  return { data: { data: [] } }
+}
+
+// 获取表格数据
+api.getTableData = () => {
+  return api.get('/TQ/table')
 }
 
 // 提交答案
 api.submitAnswer = (questionId, userOption) => {
-  return api.post('/api/submit-answer', { questionId, userOption })
+  return api.post('/choice', { _id: questionId, userOption })
 }
 
 // 获取用户设置
 api.getUserSetting = () => {
-  return api.get('/api/user-setting')
+  return api.get('/fetchUserSettings')
 }
 
 // 更新用户设置
 api.updateUserSetting = (settings) => {
-  return api.post('/api/update-user-setting', settings)
+  return api.post('/modifyUserSetting', settings)
 }
 
 // 加入收藏
 api.addFavorite = (questionId, keywords, comment) => {
-  return api.post('/api/add-favorite', { questionId, keywords, comment })
+  return api.post('/addFavoriteTitle', { titleid: questionId, keywords, comment })
 }
 
 // 旧项目API方法
@@ -67,7 +96,7 @@ api.fetchTitle = (id) => {
 
 // 提交答案（旧格式）
 api.submitChoice = (id, userOption) => {
-  return api.post('/choice', { userOption, _id: id })
+  return api.post('/choice', { _id: id, userOption })
 }
 
 // 重置答题记录
@@ -133,5 +162,25 @@ api.editTitle = (id, title, explanation) => {
 api.fetchAllTypeImage = (questionId, type) => {
   return api.get(`/fetchAllTypeImage/${questionId}/${type}`)
 }
+
+api.fetchProcessSerial = () => {
+  return api.get('/processSerial')
+}
+
+api.updateProcessSerial = (serial) => {
+  return api.post('/updateProcessSerial', { serial })
+}
+
+// 获取题目ID
+api.fetchQidBySerial = (serial) => {
+  return api.get(`/fetchQid`, {params: {serial}})
+}
+
+// // 获取解释
+// api.getExplanation = (questionId) => {
+//   return api.get(`/getExplanation`, {params: {questionId}})
+// }
+
+
 
 export default api

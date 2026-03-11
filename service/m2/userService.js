@@ -24,8 +24,8 @@ async function getUser(userEmail) {
 async function validateUser(userEmail, userPasswd) {
     //code -1 means user is not existed, code n means nth param dismatch
     try {
-        const result = await this.getUser(userEmail)
-        if (result) {
+        const result = await getUser(userEmail)
+        if (result && result.length > 0) {
             if (result[0].password == userPasswd) {
                 const user = new UserDto(result[0].id, result[0].email, result[0].subject_id, result[0].chapter_id, result[0].section_id, result[0].currentSubject, result[0].currentChapter, result[0].currentSection, result[0].role)
                 return { user: user, code: 0 }
@@ -41,8 +41,15 @@ async function validateUser(userEmail, userPasswd) {
 }
 
 async function saveUserChoice(userId, questionId, userOption, isChoiceCorrect) {
-    const sql = 'insert into useranswer (user_id, question_id, choice_options, choice_correct) values(?, ?, ?, ?)'
+    let sql = 'select * from useranswer where user_id = ? and question_id = ?'
     try {
+        const [rows] = await pool.query(sql, [userId, questionId])
+        if (rows.length > 0) {
+            throw new Error(`saveUserChoice: User ${userId} has already answered question ${questionId}`)
+        }
+        
+        sql = 'insert into useranswer (user_id, question_id, choice_options, choice_correct) values(?, ?, ?, ?)'
+
         const [result] = await pool.query(sql,
             [
                 userId,
@@ -53,7 +60,7 @@ async function saveUserChoice(userId, questionId, userOption, isChoiceCorrect) {
         )
         return result.insertId == -1 ? false : true
     } catch (err) {
-        throw new Error(`saveUserChoice: ${err.code}`)
+        throw new Error(`saveUserChoice: ${err.message}`)
     }
 }
 

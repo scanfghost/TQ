@@ -1,11 +1,13 @@
 <template>
-  <div v-if="visible" class="switchSubject-content modalCard">
+  <div v-if="visible" class="switchSubject-wrapper">
     <div class="shadow-cover" @click="close"></div>
-    <div class="modal-content">
+    <div class="modalCard">
+      <div class="modal-content">
       <h3>选择科目与章节</h3>
       <div class="form-group">
         <label>科目</label>
         <select v-model="selectedSubject" @change="onSubjectChange">
+          <option value="" disabled>-- 请选择 --</option>
           <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
             {{ subject.name }}
           </option>
@@ -13,7 +15,8 @@
       </div>
       <div class="form-group">
         <label>章节</label>
-        <select v-model="selectedChapter" @change="onChapterChange">
+        <select v-model="selectedChapter" @change="onChapterChange" :disabled="!selectedSubject">
+          <option value="" disabled>-- 请选择 --</option>
           <option v-for="chapter in chapters" :key="chapter.id" :value="chapter.id">
             {{ chapter.name }}
           </option>
@@ -21,7 +24,8 @@
       </div>
       <div class="form-group">
         <label>小节</label>
-        <select v-model="selectedSection">
+        <select v-model="selectedSection" :disabled="!selectedChapter">
+          <option value="" disabled>-- 请选择 --</option>
           <option v-for="section in sections" :key="section.id" :value="section.id">
             {{ section.name }}
           </option>
@@ -31,12 +35,14 @@
         <button class="cancel-btn" @click="close">取消</button>
         <button class="confirm-btn" @click="confirm">确认</button>
       </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import { ref, onMounted, onUnmounted } from 'vue'
+import api from '../../utils/api.js'
 
 export default {
   name: 'SwitchSubject',
@@ -46,52 +52,121 @@ export default {
     const selectedChapter = ref('')
     const selectedSection = ref('')
     
-    const subjects = ref([
-      { id: '1', name: '数学' },
-      { id: '2', name: '语文' },
-      { id: '3', name: '英语' }
-    ])
-    
-    const chapters = ref([
-      { id: '1', name: '第一章', subjectId: '1' },
-      { id: '2', name: '第二章', subjectId: '1' }
-    ])
-    
-    const sections = ref([
-      { id: '1', name: '第一节', chapterId: '1' },
-      { id: '2', name: '第二节', chapterId: '1' }
-    ])
+    const subjects = ref([])
+    const chapters = ref([])
+    const sections = ref([])
 
-    const open = () => {
+    const loadSubjects = async () => {
+      try {
+        const response = await api.fetchSubjectForm()
+        if (response.data.data && response.data.data.subjectNames) {
+          subjects.value = response.data.data.subjectNames.map((name, index) => ({
+            id: name,
+            name: name
+          }))
+        }
+      } catch (error) {
+      }
+    }
+
+    const loadChapters = async (subjectName) => {
+      try {
+        const response = await api.fetchChapterNames(subjectName)
+        if (response.data.data && response.data.data.chapterNames) {
+          chapters.value = response.data.data.chapterNames.map((name) => ({
+            id: name,
+            name: name
+          }))
+        }
+      } catch (error) {
+      }
+    }
+
+    const loadSections = async (chapterName) => {
+      try {
+        const response = await api.fetchSectionNames(chapterName)
+        if (response.data.data && response.data.data.sectionNames) {
+          sections.value = response.data.data.sectionNames.map((name) => ({
+            id: name,
+            name: name
+          }))
+        }
+      } catch (error) {
+      }
+    }
+
+    const open = async () => {
       visible.value = true
+      await loadSubjects()
     }
 
     const close = () => {
       visible.value = false
-    }
-
-    const onSubjectChange = () => {
-      // 根据选择的科目过滤章节
+      selectedSubject.value = ''
       selectedChapter.value = ''
       selectedSection.value = ''
+      chapters.value = []
+      sections.value = []
     }
 
-    const onChapterChange = () => {
-      // 根据选择的章节过滤小节
+    const onSubjectChange = async () => {
+      selectedChapter.value = ''
       selectedSection.value = ''
+      chapters.value = []
+      sections.value = []
+      if (selectedSubject.value) {
+        await loadChapters(selectedSubject.value)
+      }
     }
 
-    const confirm = () => {
-      // 确认选择
-      const event = new CustomEvent('subject-changed', {
-        detail: {
-          subject: selectedSubject.value,
-          chapter: selectedChapter.value,
-          section: selectedSection.value
+    const onChapterChange = async () => {
+      selectedSection.value = ''
+      sections.value = []
+      if (selectedChapter.value) {
+        await loadSections(selectedChapter.value)
+      }
+    }
+
+    const confirm = async () => {
+      if (!selectedSubject.value || !selectedChapter.value || !selectedSection.value) {
+        return
+      }
+      
+      try {
+        const response = await api.modifyUserSubject(
+          selectedSubject.value,
+          selectedChapter.value,
+          selectedSection.value
+        )
+        
+        if (response.data.data && response.data.data.success) {
+          const event = new CustomEvent('subject-changed', {
+            detail: {
+              subject: selectedSubject.value,
+              chapter: selectedChapter.value,
+              section: selectedSection.value
+            }
+          })
+          window.dispatchEvent(event)
+          
+          const event2 = new CustomEvent('show-response-tip', {
+            detail: {
+              message: '切换成功',
+              duration: 2000
+            }
+          })
+          window.dispatchEvent(event2)
         }
-      })
-      window.dispatchEvent(event)
-      close()
+        close()
+      } catch (error) {
+        const event = new CustomEvent('show-response-tip', {
+          detail: {
+            message: '切换失败: ' + (error.response?.data?.errMsg || error.message),
+            duration: 2000
+          }
+        })
+        window.dispatchEvent(event)
+      }
     }
 
     onMounted(() => {
@@ -120,77 +195,82 @@ export default {
 </script>
 
 <style scoped>
-.modalCard {
+.switchSubject-wrapper {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 1000;
 }
 
 .shadow-cover {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999;
 }
 
-.modal-content {
+.modalCard {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background-color: white;
-  padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 400px;
-  max-width: 90vw;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  width: 400px;
+  max-width: 90%;
+  padding: 20px;
 }
 
 .modal-content h3 {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: #333;
+  margin: 0 0 20px 0;
+  text-align: center;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 15px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #666;
+  margin-bottom: 5px;
+  font-weight: bold;
 }
 
 .form-group select {
   width: 100%;
-  padding: 0.8rem;
+  padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 1rem;
+  font-size: 14px;
+}
+
+.form-group select:disabled {
+  background-color: #f5f5f5;
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .cancel-btn, .confirm-btn {
-  padding: 0.8rem 1.5rem;
+  padding: 8px 20px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease;
+  font-size: 14px;
 }
 
 .cancel-btn {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: #f5f5f5;
+  color: #666;
 }
 
 .cancel-btn:hover {

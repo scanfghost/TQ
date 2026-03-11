@@ -1,6 +1,7 @@
 <template>
   <div class="panel">
     <div class="float-btn" @click="togglePanel">＋</div>
+    <div class="panel-overlay" v-show="panelVisible" @click="togglePanel"></div>
     <div class="actions" v-show="panelVisible">
       <div class="actions-item" id="subjectName">
         {{ currentSubject }}
@@ -11,22 +12,6 @@
       <div class="actions-item" id="sectionName" style="border-bottom: 1px solid rgb(146, 144, 144);">
         {{ currentSection }}
       </div>
-      <div class="actions-item" id="AIConsultant"
-           style="border-bottom: 1px solid rgb(146, 144, 144); cursor: pointer;"
-           @click="openAIConsultant">
-        <span style="display: inline-block;
-        padding: 2px 6px;
-        font-size: 11px;
-        font-weight: bold;
-        line-height: 1;
-        color: #ffffff;
-        background-color: #6e7781;
-        /* GitHub 灰 */
-        border-radius: 4px;
-        margin-right: 6px;
-        vertical-align: middle;
-        white-space: nowrap;">Beta</span>AI咨询
-      </div>
       <div class="action actions-item" id="selectSubject" @click="openSwitchSubject">
         选择科目与章节
       </div>
@@ -36,7 +21,7 @@
       <div v-if="isAdmin" class="action actions-item" id="uploadPictureOfTitle" @click="openUploadPicture('title')">
         设置题干图片
       </div>
-      <div v-if="isAdmin" class="action actions-item" id="uploadPictureOfExplan" @click="openUploadPicture('explan')">
+      <div v-if="isAdmin" class="action actions-item" id="uploadPictureOfExplan" @click="openUploadPicture('explanation')">
         设置解释图片
       </div>
       <div v-if="isAdmin" class="action actions-item" id="editTitle" @click="openEditTitle">
@@ -57,24 +42,19 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import api from '../../utils/api.js'
 
 export default {
   name: 'Panel',
   setup() {
     const panelVisible = ref(false)
-    const currentSubject = ref('数学')
-    const currentChapter = ref('第一章')
-    const currentSection = ref('第一节')
+    const currentSubject = ref('')
+    const currentChapter = ref('')
+    const currentSection = ref('')
     const isAdmin = ref(false)
 
     const togglePanel = () => {
       panelVisible.value = !panelVisible.value
-    }
-
-    const openAIConsultant = () => {
-      // 触发打开AI咨询
-      const event = new CustomEvent('open-ai-consultant')
-      window.dispatchEvent(event)
     }
 
     const openSwitchSubject = () => {
@@ -85,7 +65,7 @@ export default {
 
     const saveAnswer = () => {
       // 提交作答版本
-      const event = new CustomEvent('save-answer')
+      const event = new CustomEvent('save-history-answer')
       window.dispatchEvent(event)
     }
 
@@ -111,8 +91,21 @@ export default {
 
     const restartAnswer = () => {
       // 重新做题
-      const event = new CustomEvent('restart-answer')
-      window.dispatchEvent(event)
+      if (confirm('确定要清空当前学习路径的所有答题记录吗？')) {
+        api.restartAnswer().then(() => {
+          // 触发刷新题目列表事件
+          const refreshEvent = new CustomEvent('question-list-refresh')
+          window.dispatchEvent(refreshEvent)
+          
+          // 触发题目刷新事件（会自动刷新Explanation组件）
+          const questionRefreshEvent = new CustomEvent('question-refresh')
+          window.dispatchEvent(questionRefreshEvent)
+          
+          // 触发清空答案状态事件
+          const clearAnswerEvent = new CustomEvent('clear-answer')
+          window.dispatchEvent(clearAnswerEvent)
+        })
+      }
     }
 
     const openSetting = () => {
@@ -121,8 +114,29 @@ export default {
       window.dispatchEvent(event)
     }
 
+    const loadCurrentStudyPath = async () => {
+      try {
+        // 监听来自TQ页面的用户信息更新事件
+        window.addEventListener('user-updated', (event) => {
+          const { user } = event.detail
+          if (user) {
+            isAdmin.value = user.role === 'admin'
+          }
+        })
+        
+        // 监听来自TQ页面的学习路径更新事件
+        window.addEventListener('update-study-path', (event) => {
+          const { subject, chapter, section } = event.detail
+          currentSubject.value = subject || '未设置'
+          currentChapter.value = chapter || '未设置'
+          currentSection.value = section || '未设置'
+        })
+      } catch (error) {
+      }
+    }
+
     onMounted(() => {
-      // 可以从API获取当前科目信息和用户权限
+      loadCurrentStudyPath()
     })
 
     return {
@@ -132,7 +146,6 @@ export default {
       currentSection,
       isAdmin,
       togglePanel,
-      openAIConsultant,
       openSwitchSubject,
       saveAnswer,
       openUploadPicture,
@@ -151,6 +164,15 @@ export default {
   bottom: 2rem;
   right: 2rem;
   z-index: 100;
+}
+
+.panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
 }
 
 .float-btn {
@@ -180,9 +202,11 @@ export default {
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: 80vh;
   min-width: 200px;
   animation: slideUp 0.3s ease;
+  z-index: 101;
 }
 
 @keyframes slideUp {

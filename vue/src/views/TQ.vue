@@ -3,30 +3,24 @@
     <div class="content">
       <div class="QA">
         <div class="title-content">
-          <TitleChoice @question-change="updateCurrentQuestion" />
+          <TitleChoice 
+            :total-questions="totalQuestions" 
+            @update:question="currentQuestion = $event"
+            :settings="settings"
+            @update:serial="currentSerial = $event"
+          />
         </div>
         <div class="explanation-content">
-          <Explanation :question="currentQuestion" />
-        </div>
-        <!-- 进度条 -->
-        <div class="progress-bar">
-          <div 
-            class="progress-fill" 
-            :style="{ width: progressPercentage + '%' }"
-          ></div>
+          <Explanation :question="currentQuestion" :settings="settings"/>
         </div>
       </div>
       <div class="table-content">
-        <QuestionTable />
+        <QuestionTable :settings="settings" :serial="currentSerial"/> 
       </div>
-    </div>
-    <!-- 右下角加号按钮 -->
-    <div class="add-button">
-      <button class="plus-btn">+</button>
     </div>
     <Panel />
     <SwitchSubject />
-    <Setting />
+    <Setting @update:settings="settings = $event"/>
     <UploadPicture />
     <AddFavorite />
     <EditTitle />
@@ -45,7 +39,9 @@ import UploadPicture from '../components/Modals/UploadPicture.vue'
 import AddFavorite from '../components/Modals/AddFavorite.vue'
 import EditTitle from '../components/Modals/EditTitle.vue'
 import ResponseTip from '../components/Common/ResponseTip.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../utils/api.js'
 
 export default {
   name: 'TQ',
@@ -62,25 +58,101 @@ export default {
     ResponseTip
   },
   setup() {
+    const router = useRouter()
     const currentQuestion = ref(null)
-    const currentIndex = ref(0)
-    const totalQuestions = ref(22) // 假设总共有22道题
+    const totalQuestions = ref()
+    const questionList = ref([])
+    const settings = ref({})
+    const currentSerial = ref(null)
 
-    const updateCurrentQuestion = (question, index) => {
-      currentQuestion.value = question
-      currentIndex.value = index
+    // 检查用户是否登录（session是否有效）
+    const checkAuth = async () => {
+      try {
+        const response = await api.get('/authCheck')
+        
+        if (!response.data.data?.logined) {
+          // session过期，重定向到登录页面
+          router.push('/')
+          return false
+        }
+        return true
+      } catch (error) {
+        // 发生错误，重定向到登录页面
+        router.push('/')
+        return false
+      }
     }
 
-    const progressPercentage = computed(() => {
-      return ((currentIndex.value + 1) / totalQuestions.value) * 100
+    // 加载题目数据
+    const loadQuestions = async () => {
+      try {
+        // 首先检查认证状态
+        const isAuthenticated = await checkAuth()
+        if (!isAuthenticated) return
+
+        const response = await api.get('/TQ')
+        
+        if (response.data.data) {
+          const { userSetting, user, currentQuestionId, questionCount } = response.data.data
+          userSetting.value = userSetting
+          user.value = user
+          totalQuestions.value = questionCount
+          
+          // 触发用户信息更新事件
+          const userEvent = new CustomEvent('user-updated', {
+            detail: { user }
+          })
+          window.dispatchEvent(userEvent) 
+          
+          // 触发学习路径更新事件，传递给Panel组件
+          if (user) {
+            const event = new CustomEvent('update-study-path', {
+              detail: {
+                subject: user.currentSubject || '',
+                chapter: user.currentChapter || '',
+                section: user.currentSection || ''
+              }
+            })
+            window.dispatchEvent(event)
+          }
+        }
+      } catch (error) {
+        // 如果是认证错误，重定向到登录页面
+        if (error.response?.status === 401) {
+          router.push('/')
+        }
+      }
+    }
+
+    const handleSubjectChanged = (event) => {
+      // 触发题目列表刷新事件，通知QuestionTable等组件
+      const refreshEvent = new CustomEvent('question-list-refresh')
+      window.dispatchEvent(refreshEvent)
+    }
+
+    const handleSaveHistoryAnswer = async () => {
+      try {
+        await api.saveHistoryAnswer()
+      } catch (error) {
+      }
+    }
+
+    onMounted(() => {
+      loadQuestions()
+
+      // 监听科目切换事件
+      window.addEventListener('subject-changed', handleSubjectChanged)
+
+      // 监听保存历史答案事件
+      window.addEventListener('save-history-answer', handleSaveHistoryAnswer)
     })
 
     return {
       currentQuestion,
-      currentIndex,
       totalQuestions,
-      progressPercentage,
-      updateCurrentQuestion
+      questionList,
+      settings,
+      currentSerial
     }
   }
 }
@@ -128,54 +200,6 @@ export default {
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 进度条样式 */
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-top: 1rem;
-}
-
-.progress-fill {
-  height: 100%;
-  background-color: #4CAF50;
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-/* 右下角加号按钮 */
-.add-button {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  z-index: 1000;
-}
-
-.plus-btn {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: #2196F3;
-  color: white;
-  border: none;
-  font-size: 2rem;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.plus-btn:hover {
-  background-color: #1976D2;
-  transform: scale(1.1);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
 @media (max-width: 1200px) {

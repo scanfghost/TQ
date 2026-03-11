@@ -10,6 +10,10 @@ async function loginUser(req, res) {
         const { user, code } = await m2UserService.validateUser(req.body.userEmail, req.body.userPasswd)
         if (user) {
             req.session.user = user
+            // 显式保存session，确保用户信息被正确存储
+            await new Promise((resolve, reject) => {
+                req.session.save(err => err ? reject(err) : resolve());
+            });
             formatRes.data.loginSuccess = true
             //test
             formatRes.data.userEmail = user.userEmail

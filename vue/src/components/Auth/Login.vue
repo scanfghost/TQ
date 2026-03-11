@@ -1,17 +1,19 @@
 <template>
-  <div v-if="visible" class="login-content modalCard">
+  <div v-if="visible" class="login-wrapper">
     <div class="shadow-cover" @click="close"></div>
-    <div class="modal-content" @click.stop>
-      <h2>登录</h2>
-      <form @submit.prevent="login">
-        <div>邮箱</div>
-        <input type="email" v-model="userEmail" required>
-        <div>密码</div>
-        <input type="password" v-model="userPasswd" required>
-        <button id="submitLoginButton" type="submit">
-          提交
-        </button>
-      </form>
+    <div class="modalCard">
+      <div class="modal-content" @click.stop>
+        <h2>登录</h2>
+        <form @submit.prevent="login">
+          <div>邮箱</div>
+          <input type="email" v-model="userEmail" required>
+          <div>密码</div>
+          <input type="password" v-model="userPasswd" required>
+          <button id="submitLoginButton" type="submit">
+            提交
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -98,6 +100,15 @@ export default {
 </script>
 
 <style scoped>
+.login-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
 .modalCard {
   position: fixed;
   top: 50%;
@@ -112,7 +123,9 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 999;
+  cursor: pointer;
 }
 
 .modal-content {

@@ -10,17 +10,21 @@ let app = express()
 
 app.set('view engine', 'ejs')
 
-// 精确的本机 CORS 配置
-const corsOptions = {
-  origin: [
-    'http://localhost:5173'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Length', 'X-Total-Count'],
-  credentials: true,              
-}
-app.use(cors(corsOptions))
+// 动态 CORS 配置，支持带凭据的请求
+app.use((req, res, next) => {
+  const origin = req.headers.origin
+  res.setHeader('Access-Control-Allow-Origin', origin || '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, X-Total-Count')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end()
+  }
+  
+  next()
+})
 app.use(express.static('./public'))
 app.use(express.json())
 app.use(sessionMiddleware);

@@ -2,6 +2,28 @@ const pool = require('../../config/mysql2/connectionPool')
 const { QuestionDto, createBasicChoice, createBasicUserAnswer } = require('../../dto/QuestionDto')
 const m2ImageService = require('./imageService')
 
+async function getQuestionIdBySerialAndPath(subjectId, chapterId, sectionId, serial) {
+    const sql = 'select id from question where subject_id = ? and chapter_id = ? and section_id = ? and serial = ?'
+    try {
+        const [rows] = await pool.query(sql,
+            [
+                subjectId,
+                chapterId,
+                sectionId,
+                serial
+            ]
+        )
+
+        if (rows.length == 0) {
+            throw new Error(`not found by ${subjectId}-${chapterId}-${sectionId}-${serial}`)
+        }
+
+        return rows[0].id
+    } catch (err) {
+        throw new Error(`getQuestionIdBySerialAndPath: ${err}`)
+    }
+}
+
 async function getQuestionCountByStudyPath(subjectId, chapterId, sectionId) {
     const sql = 'select count(*) as count from question where subject_id = ? and chapter_id = ? and section_id = ?'
     try {
@@ -99,12 +121,13 @@ async function getIdSerialUserAnswerByStudyPath(user) {
         useranswer.choice_options as userOption,
         useranswer.choice_correct as isCorrect
     from question 
-    left join useranswer on question.id = useranswer.question_id
+    left join useranswer on question.id = useranswer.question_id and useranswer.user_id = ?
     where subject_id = ? and chapter_id = ? and section_id = ?
     order by question.serial asc`
     try {
         const [result] = await pool.query(sql,
             [
+                user.id,
                 user.subjectId,
                 user.chapterId,
                 user.sectionId
@@ -163,7 +186,7 @@ async function getQuestionUserAnswerById(questionId, user) {
         )
 
         questionDto.insertChoiceUserAnswer(createBasicUserAnswer(result[0].userOption, result[0].isCorrect))
-        
+
         if (titleImageDtoList) {
             questionDto.insertTitleImages(titleImageDtoList)
         }
@@ -171,7 +194,7 @@ async function getQuestionUserAnswerById(questionId, user) {
         if (explanImageDtoList) {
             questionDto.insertExplanImages(explanImageDtoList)
         }
-        
+
         return questionDto
     } catch (err) {
         throw new Error(`getQuestionUserAnswerById: ${err}`)
@@ -231,15 +254,15 @@ async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectio
         if (finishedCount < questionCount) {
             throw new Error('还有题目未完成')
         }
-        
+
         await connection.beginTransaction()
 
         let entireSame = true
 
-        let sql = 
-        `select id from question where subject_id = ? and chapter_id = ? and section_id = ?`
+        let sql =
+            `select id from question where subject_id = ? and chapter_id = ? and section_id = ?`
 
-        const [questionIds] = await pool.query(sql, 
+        const [questionIds] = await pool.query(sql,
             [
                 subjectId,
                 chapterId,
@@ -247,10 +270,10 @@ async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectio
             ]
         )
 
-        for(let item of questionIds){
+        for (let item of questionIds) {
             const qid = item.id
-            sql = 
-            `select choice_options, choice_correct from useranswer where user_id = ? and question_id = ?`
+            sql =
+                `select choice_options, choice_correct from useranswer where user_id = ? and question_id = ?`
             const [useranswers] = await pool.query(sql,
                 [
                     userId,
@@ -262,10 +285,10 @@ async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectio
                 continue
             }
 
-            const {choice_options, choice_correct} = useranswers[0]
+            const { choice_options, choice_correct } = useranswers[0]
 
-            sql = 
-            `select * from historyanswer where user_id = ? and question_id = ?`
+            sql =
+                `select * from historyanswer where user_id = ? and question_id = ?`
 
             const [historyanswers] = await pool.query(sql,
                 [
@@ -275,7 +298,7 @@ async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectio
             )
 
             let maxAttempNumber = 0, existing = false
-            for(let item of historyanswers){
+            for (let item of historyanswers) {
                 if (maxAttempNumber < item.attemp_number) {
                     maxAttempNumber = item.attemp_number
                 }
@@ -287,9 +310,9 @@ async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectio
 
             if (existing == false) {
                 entireSame = false
-                sql = 
-                `insert into historyanswer (user_id, question_id, choice_options, choice_correct, attemp_number) values(?, ?, ?, ?, ?)`
-                const [rows] = await pool.query(sql, 
+                sql =
+                    `insert into historyanswer (user_id, question_id, choice_options, choice_correct, attemp_number) values(?, ?, ?, ?, ?)`
+                const [rows] = await pool.query(sql,
                     [
                         userId,
                         qid,
@@ -298,11 +321,11 @@ async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectio
                         maxAttempNumber + 1
                     ]
                 )
-                if(rows.affectedRows == 0){
+                if (rows.affectedRows == 0) {
                     throw new Error(`insert historyanswer failed`)
                 }
             }
-            
+
         }
 
         if (entireSame) {
@@ -318,15 +341,15 @@ async function saveHistoryAnswerByStudyPath(userId, subjectId, chapterId, sectio
 }
 
 async function addFavoriteQuestion(userId, questionId, keywords, comment) {
-    if(!Array.isArray(keywords)){
+    if (!Array.isArray(keywords)) {
         throw new Error(`keywords must be an array`)
     }
     if (typeof comment === 'string' && comment.length > 300) {
         throw new Error('评论内容不能超过 300 个字符')
     }
     try {
-        let sql = 
-        `select count(*) as count from favoritequestion where user_id = ? and question_id = ?`
+        let sql =
+            `select count(*) as count from favoritequestion where user_id = ? and question_id = ?`
 
         const [existedCount] = await pool.query(sql,
             [
@@ -339,8 +362,8 @@ async function addFavoriteQuestion(userId, questionId, keywords, comment) {
             throw new Error(`the question is already favorited`)
         }
 
-        sql = 
-        `insert into favoritequestion (user_id, question_id, keywords, comment) values(?, ?, ?, ?)`
+        sql =
+            `insert into favoritequestion (user_id, question_id, keywords, comment) values(?, ?, ?, ?)`
 
         const [result] = await pool.query(sql,
             [
@@ -361,8 +384,8 @@ async function addFavoriteQuestion(userId, questionId, keywords, comment) {
 }
 
 async function removeUserAnswerByStudyPath(userId, subjectId, chapterId, sectionId) {
-    const sql = 
-    `delete ua
+    const sql =
+        `delete ua
     from useranswer ua
     inner join question q on  ua.question_id = q.id
     where q.subject_id = ? and q.chapter_id = ? and q.section_id = ? and ua.user_id = ?`
@@ -384,6 +407,69 @@ async function removeUserAnswerByStudyPath(userId, subjectId, chapterId, section
     }
 }
 
+async function resetProcessSerialByStudyPath(userId, subjectId, chapterId, sectionId) {
+    let sql = `insert into studypathprocess (user_id, subject_id, chapter_id, section_id, serial) values (?, ?, ?, ?, ?)`
+
+    try {
+        const [result] = await pool.query(sql, [
+            userId,
+            subjectId,
+            chapterId,
+            sectionId,
+            1
+        ])
+
+        if (result.affectedRows == 0) {
+            throw new Error(`reset failed by database`)
+        }
+    } catch (err) {
+        console.log(`resetProcessSerialByStudyPath: ${err}`)
+        throw new Error(`resetProcessSerialByStudyPath: ${err.message}`)
+    }
+}
+
+async function getProcessSerialByStudyPath(userId, subjectId, chapterId, sectionId) {
+    let sql = `select serial from studypathprocess where user_id = ? and subject_id = ? and chapter_id = ? and section_id = ?`
+
+    try {
+        const [result] = await pool.query(sql, [
+            userId,
+            subjectId,
+            chapterId,
+            sectionId
+        ])
+
+        if (result.length == 0) {
+            await resetProcessSerialByStudyPath(userId, subjectId, chapterId, sectionId)
+            return 1
+        }
+        return result[0].serial
+    } catch (err) {
+        console.log(`getProcessSerialByStudyPath: ${err}`)
+        throw new Error(`getProcessSerialByStudyPath: ${err.message}`)
+    }
+}
+
+async function updateProcessSerialByStudyPath(userId, subjectId, chapterId, sectionId, serial) {
+    let sql = `update studypathprocess set serial = ? where user_id = ? and subject_id = ? and chapter_id = ? and section_id = ?`
+
+    try {
+        const [result] = await pool.query(sql, [
+            serial,
+            userId,
+            subjectId,
+            chapterId,
+            sectionId
+        ])
+
+        if (result.affectedRows == 0) {
+            throw new Error(`update failed by database`)
+        }
+    } catch (err) {
+        console.log(`updateProcessSerialByStudyPath: ${err}`)
+        throw new Error(`updateProcessSerialByStudyPath: ${err.message}`)
+    }
+}
 
 module.exports = {
     getQuestionCountByStudyPath,
@@ -394,5 +480,8 @@ module.exports = {
     editChoiceQuestion,
     saveHistoryAnswerByStudyPath,
     addFavoriteQuestion,
-    removeUserAnswerByStudyPath
+    removeUserAnswerByStudyPath,
+    getQuestionIdBySerialAndPath,
+    getProcessSerialByStudyPath,
+    updateProcessSerialByStudyPath
 }

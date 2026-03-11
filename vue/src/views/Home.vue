@@ -19,6 +19,7 @@ import Login from '../components/Auth/Login.vue'
 import ResponseTip from '../components/Common/ResponseTip.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '../utils/api.js'
 
 export default {
   name: 'Home',
@@ -31,19 +32,37 @@ export default {
     const router = useRouter()
     const isLoggedIn = ref(false)
 
+    const checkAuth = async () => {
+      try {
+        const response = await api.get('/authCheck')
+        return response.data.data?.logined || false
+      } catch (error) {
+        console.error('认证检查失败:', error)
+        return false
+      }
+    }
+
     onMounted(() => {
       // 检查登录状态
       const userEmail = sessionStorage.getItem('userEmail')
       isLoggedIn.value = !!userEmail
     })
 
-    const goToTQ = () => {
+    const goToTQ = async () => {
       if (!isLoggedIn.value) {
         // 触发登录模态框
         const event = new CustomEvent('show-login')
         window.dispatchEvent(event)
       } else {
-        router.push('/TQ')
+        // 检查真正的session状态
+        const isAuthenticated = await checkAuth()
+        if (isAuthenticated) {
+          router.push('/TQ')
+        } else {
+          // session已过期，触发登录模态框
+          const event = new CustomEvent('show-login')
+          window.dispatchEvent(event)
+        }
       }
     }
 
