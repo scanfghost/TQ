@@ -132,8 +132,24 @@ export default {
 
     const handleSaveHistoryAnswer = async () => {
       try {
-        await api.saveHistoryAnswer()
+        const response = await api.saveHistoryAnswer()
+        // 触发成功提示
+        const event = new CustomEvent('show-response-tip', {
+          detail: {
+            message: '作答版本保存成功',
+            duration: 2000
+          }
+        })
+        window.dispatchEvent(event)
       } catch (error) {
+        // 触发错误提示
+        const event = new CustomEvent('show-response-tip', {
+          detail: {
+            message: '作答版本保存失败',
+            duration: 2000
+          }
+        })
+        window.dispatchEvent(event)
       }
     }
 

@@ -10,7 +10,7 @@
       </div>
 
       <!-- 单空单选 -->
-      <div class="options" v-if="question.type === 'choice'">
+      <div class="options" v-if="question.type === 'choice' && question.blankType === 'single'">
         <div v-for="(option, index) in question.options" :key="index" class="option" :class="optionsClass[index]"
           @click="selectOption(index)">
           {{ String.fromCharCode(65 + index) }}. {{ option }}
@@ -18,7 +18,7 @@
       </div>
 
       <!-- 单空多选 -->
-      <div class="options" v-else-if="question.type === 'multiple_choice'">
+      <div class="options" v-else-if="question.type === 'choice' && question.blankType === 'singlemultiple'">
         <div v-for="(option, index) in question.options" :key="index" class="option" :class="{
           'selected': (question.userOption ? question.userOption.includes(index) : selectedOptions.includes(index)),
           'correct': (question.isCorrect == true || question.isCorrect === 1) && (question.userOption ? question.userOption.includes(index) : selectedOptions.includes(index)),
@@ -34,20 +34,18 @@
       </div>
 
       <!-- 多空单选 -->
-      <div class="options" v-else-if="question.type === 'multiple_blank'">
+      <div class="options" v-else-if="question.type === 'choice' && question.blankType === 'multiplesingle'">
         <div v-for="(group, groupIndex) in question.optionGroups" :key="groupIndex" class="option-group">
           <h4>第 {{ groupIndex + 1 }} 空</h4>
           <div v-for="(option, index) in group" :key="index" class="option" :class="{
-            'selected': (question.userOption ? question.userOption[groupIndex] === index : multiBlankAnswers[groupIndex] === index),
-            'correct': (question.isCorrect == true || question.isCorrect === 1) && (question.userOption ? question.userOption[groupIndex] === index : multiBlankAnswers[groupIndex] === index),
-            'wrong': (question.isCorrect == false || question.isCorrect === 0) && (question.userOption ? question.userOption[groupIndex] === index : multiBlankAnswers[groupIndex] === index),
-            'disabled': question.userOption !== undefined && question.userOption !== null && question.userOption !== ''
+            'selected': multiBlankAnswers[groupIndex] === index && !question.userOption,
+            ...(optionsClass[groupIndex]?.[index] || {})
           }" @click="selectMultiBlankOption(groupIndex, index)">
             {{ String.fromCharCode(65 + index) }}. {{ option }}
           </div>
         </div>
         <button class="submit-btn" @click="submitMultiBlankChoice"
-          :disabled="!allMultiBlankAnswered || (question.userOption !== undefined && question.userOption !== null && question.userOption !== '')">
+          :disabled="!allMultiBlankAnswered || (question.userOption && question.userOption.length > 0)">
           提交答案
         </button>
       </div>
@@ -100,7 +98,7 @@ export default {
         return classes
       }
 
-      if (question.value?.type === 'choice')  {
+      if (question.value?.type === 'choice' && question.value?.blankType === 'single')  {
         const userOptionIndex = question.value?.userOption[0][0]
         if (userOptionIndex !== undefined) {
           for (let i = 0; i < question.value?.options.length; i++) {
@@ -114,8 +112,30 @@ export default {
             classes[userOptionIndex].wrong = question.value?.isCorrect == false || question.value?.isCorrect === 0
           }
         }
-      } else if (question.value?.type === 'multiple_choice') {
-      } else if (question.value?.type === 'multiple_blank') {
+      } else if (question.value?.type === 'choice' && question.value?.blankType === 'singlemultiple') {
+      } else if (question.value?.type === 'choice' && question.value?.blankType === 'multiplesingle') {
+        const userOption = question.value?.userOption
+        if (userOption) {
+          for (let groupIndex = 0; groupIndex < question.value?.optionGroups.length; groupIndex++) {
+            const group = question.value?.optionGroups[groupIndex]
+            for (let i = 0; i < group.length; i++) {
+              if (!classes[groupIndex]) {
+                classes[groupIndex] = []
+              }
+              classes[groupIndex][i] = {}
+              classes[groupIndex][i].disabled = true
+            }
+            const userOptionIndex = userOption[groupIndex]?.[0]
+            if (userOptionIndex !== undefined) {
+              if (!props.settings?.instantJudge) {
+                classes[groupIndex][userOptionIndex].selected = true
+              } else {
+                classes[groupIndex][userOptionIndex].correct = question.value?.isCorrect == true || question.value?.isCorrect === 1
+                classes[groupIndex][userOptionIndex].wrong = question.value?.isCorrect == false || question.value?.isCorrect === 0
+              }
+            }
+          }
+        }
       }
       
       return classes
@@ -123,10 +143,12 @@ export default {
 
     // 检查是否所有多空都已回答
     const allMultiBlankAnswered = computed(() => {
-      if (!question.value || question.value.type !== 'multiple_blank') {
+      if (!question.value || question.value.type !== 'choice' || question.value.blankType !== 'multiplesingle') {
         return false
       }
-      return multiBlankAnswers.value.length === question.value.optionGroups.length
+      // 确保 multiBlankAnswers 数组长度与 optionGroups 长度一致，且每个元素都不是 undefined
+      return multiBlankAnswers.value.length === question.value.optionGroups.length && 
+        multiBlankAnswers.value.every(answer => answer !== undefined)
     })
 
     // 加载题目详情
@@ -136,13 +158,15 @@ export default {
         const response = await api.fetchTitle(questionId)
         if (response.data.data.questionDto) {
           const questionDto = response.data.data.questionDto
-          
+          console.log('questionDto', questionDto)
           question.value = {
             id: questionId,
             title: questionDto.title?.replace(/\\n/g, '\n'),
             type: questionDto.type,
+            blankType: questionDto.choice?.blankType,
+            optionType: questionDto.choice?.optionType,
             options: questionDto.choice?.options || [],
-            optionGroups: questionDto.choice?.optionGroups || [],
+            optionGroups: questionDto.choice?.individual || questionDto.choice?.optionGroups || [],
             answer: questionDto.choice?.rightOption || [],
             analysis: questionDto.explanation || '',
             titleImgs: questionDto.titleImgs || [],
@@ -152,12 +176,13 @@ export default {
           }
           // 初始化选中状态
           if (question.value.userOption) {
-            if (questionDto.type === 'choice') {
+            if (questionDto.choice?.blankType === 'single') {
               selectedOption.value = question.value.userOption[0][0]
-            } else if (questionDto.type === 'multiple_choice') {
+            } else if (questionDto.choice?.blankType === 'singlemultiple') {
               selectedOptions.value = question.value.userOption
-            } else if (questionDto.type === 'multiple_blank') {
-              multiBlankAnswers.value = question.value.userOption
+            } else if (questionDto.choice?.blankType === 'multiplesingle') {
+              // 转换服务器格式 [[0], [1]] 为本地格式 [0, 1]
+              multiBlankAnswers.value = question.value.userOption.map(option => option[0])
             }
           }
 
@@ -280,31 +305,62 @@ export default {
         return
       }
 
-      question.value.userOption[groupIndex] = [index]
+      multiBlankAnswers.value[groupIndex] = index
     }
 
     // 多空单选 - 提交答案
     const submitMultiBlankChoice = async () => {
       console.log('submitMultiBlankChoice') 
-      if (!allMultiBlankAnswered.value) return
+      if (!allMultiBlankAnswered.value) {
+        // 找出哪些空还没选
+        const unselectedGroups = []
+        for (let i = 0; i < question.value.optionGroups.length; i++) {
+          if (multiBlankAnswers.value[i] === undefined) {
+            unselectedGroups.push(i + 1)
+          }
+        }
+        // 触发提示
+        const event = new CustomEvent('show-response-tip', {
+          detail: {
+            message: `第 ${unselectedGroups.join('、')} 空还未选择`,
+            duration: 2000
+          }
+        })
+        window.dispatchEvent(event)
+        return
+      }
 
       if (question.value) {
-        question.value.userOption = multiBlankAnswers.value
+        // 转换 multiBlankAnswers 为服务器期望的格式 [[0], [1], ...]
+        const formattedUserOption = multiBlankAnswers.value.map(answer => [answer])
+        question.value.userOption = formattedUserOption
 
         try {
           const response = await api.submitChoice(
             question.value.id,
-            multiBlankAnswers.value
+            formattedUserOption
           )
 
-          if (response.data.answer === 'right') {
+          if (response.data.data.answer === 'right') {
             question.value.isCorrect = true
-          } else if (response.data.answer === 'wrong') {
+          } else if (response.data.data.answer === 'wrong') {
             question.value.isCorrect = false
           }
 
+          // 如果返回了题目详情，更新题目数据
+          if (response.data.data.questionDto) {
+            question.value = {
+              ...question.value,
+              analysis: response.data.data.questionDto.explanation || '',
+            }
+          }
+
           // 通知父组件题目变化
-          emit('update:question', question.value)
+          window.dispatchEvent(new CustomEvent('question-answered', {
+            detail: { question: question.value, index: currentSerial.value - 1 }
+          }))
+
+          window.dispatchEvent(new CustomEvent('open-answer'))
         } catch (error) {
         }
       }
@@ -349,12 +405,13 @@ export default {
       if (newQuestion) {
         // 初始化选中状态
         if (newQuestion.userOption) {
-          if (newQuestion.type === 'choice') {
+          if (newQuestion.blankType === 'single') {
             selectedOption.value = newQuestion.userOption[0][0]
-          } else if (newQuestion.type === 'multiple_choice') {
+          } else if (newQuestion.blankType === 'singlemultiple') {
             selectedOptions.value = newQuestion.userOption
-          } else if (newQuestion.type === 'multiple_blank') {
-            multiBlankAnswers.value = newQuestion.userOption
+          } else if (newQuestion.blankType === 'multiplesingle') {
+            // 转换服务器格式 [[0], [1]] 为本地格式 [0, 1]
+            multiBlankAnswers.value = newQuestion.userOption.map(option => option[0])
           }
         }
         

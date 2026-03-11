@@ -71,13 +71,20 @@ export default {
         return '';
       }
       
-      const answer = props.question.answer; 
+      const answer = props.question.answer;
       
-      // 处理单空单选的情况 [[0]] -> A
-      if (Array.isArray(answer) && answer.length === 1 && Array.isArray(answer[0])) {
-        const index = answer[0][0];
-        if (typeof index === 'number' && index >= 0 && index < 26) {
-          return String.fromCharCode(65 + index);
+      // 处理多空单选的情况 [[0], [3]] -> A D
+      if (Array.isArray(answer) && answer.length > 0 && Array.isArray(answer[0])) {
+        const letters = answer.map(item => {
+          const index = item[0];
+          if (typeof index === 'number' && index >= 0 && index < 26) {
+            return String.fromCharCode(65 + index);
+          }
+          return '';
+        }).filter(l => l !== '');
+        
+        if (letters.length > 0) {
+          return letters.join(' ');
         }
       }
       
@@ -88,6 +95,7 @@ export default {
     // 监听题目变化，渲染LaTeX公式
     watch(() => props.question, (newQuestion) => {
       if (newQuestion) {
+        // 延迟渲染，确保DOM已更新
         setTimeout(() => {
           if (window.MathJax) {
             if (window.MathJax.typesetPromise) {
@@ -96,9 +104,24 @@ export default {
               window.MathJax.tex2svgPromise()
             }
           }
-        }, 100);
+        }, 300);
       }
     }, { deep: true });
+
+    // 监听答案显示状态，当答案显示时再次渲染LaTeX
+    watch(() => hasAnswered.value, (newValue) => {
+      if (newValue) {
+        setTimeout(() => {
+          if (window.MathJax) {
+            if (window.MathJax.typesetPromise) {
+              window.MathJax.typesetPromise()
+            } else if (window.MathJax.tex2svgPromise) {
+              window.MathJax.tex2svgPromise()
+            }
+          }
+        }, 300);
+      }
+    });
 
     watch(() => props.settings, (newSettings) => {
       if (!newSettings.instantJudge) {
