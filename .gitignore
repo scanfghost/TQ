@@ -5,6 +5,7 @@
 node_modules/
 vue\node_modules\
 upload/
+backup/
 
 public/assets/img/
 
